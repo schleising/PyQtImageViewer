@@ -58,6 +58,12 @@ class MainWindow(QMainWindow):
         # Create a thumbnail list
         self._thumbnailList: list[Thumbnail] = []
 
+        # A list of the images in the current folder
+        self._imageList: list[Path] = []
+
+        # Index of the current image
+        self._currentImageIndex = 0
+
         # Set the default path
         self._defaultPath = Path.home() / 'Pictures'
 
@@ -75,16 +81,16 @@ class MainWindow(QMainWindow):
         self.fileMenu.addAction(closeAction)
         self.setMenuBar(self.menu)
 
-    def _GetImagePathList(self, imagePath: Path) -> list[Path]:
+    def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
-        return sorted([image for image in imagePath.iterdir() if image.suffix.lower() in supportedExtensions.values()], key=lambda x: x.name.lower())
+        return sorted([image for image in self._defaultPath.iterdir() if image.suffix.lower() in supportedExtensions.values()], key=lambda x: x.name.lower())
 
-    def _GetFolderList(self, imagePath: Path) -> list[Path]:
+    def _GetFolderList(self) -> list[Path]:
         # Get the list of non-hidden folders in this folder
-        folderList = sorted([path for path in imagePath.iterdir() if path.is_dir() and not path.name.startswith('.')], key=lambda x: x.name.lower())
+        folderList = sorted([path for path in self._defaultPath.iterdir() if path.is_dir() and not path.name.startswith('.')], key=lambda x: x.name.lower())
 
         # Insert the parent folder at the front of the list
-        folderList.insert(0, imagePath.parent)
+        folderList.insert(0, self._defaultPath.parent)
 
         # Return the list
         return folderList
@@ -102,10 +108,13 @@ class MainWindow(QMainWindow):
         self._thumbnailList.clear()
 
         # Get the list of folders in this folder
-        self._imageList = self._GetFolderList(self._defaultPath)
+        fileList = self._GetFolderList()
+
+        # Get the list of images in this folder
+        self._imageList = self._GetImagePathList()
 
         # Get the list of images in this folder and extend the folder list
-        self._imageList.extend(self._GetImagePathList(self._defaultPath))
+        fileList.extend(self._imageList)
 
         # Calculate the thumbnail size
         thumbnailSize = (self.width() // self._thumbnailsPerRow) - 2 * self._grid.getContentsMargins()[0]
@@ -114,7 +123,7 @@ class MainWindow(QMainWindow):
         Thumbnail.InitialiseDefaultImage(thumbnailSize)
 
         # Loop through the folders and images, creating a thumbnail for each
-        for count, imagePath in enumerate(self._imageList):
+        for count, imagePath in enumerate(fileList):
             # Create the thumbnail, will only have the default or folder image for now
             thumbnail = Thumbnail(imagePath)
 
@@ -145,9 +154,17 @@ class MainWindow(QMainWindow):
                 # Clear and recreate the grid for this folder
                 self.SetLabels()
             else:
+                # Maximise the selected image
                 self._MaximiseImage(thumbnail._imagePath)
 
+                # Get the index of this image in the image list
+                self._currentImageIndex = self._imageList.index(thumbnail._imagePath)
+
     def _MaximiseImage(self, imagePath: Path) -> None:
+        if self._imageMaximised and self._fullSizeImage:
+            # Remove the maximised image from the stack
+            self._stack.removeWidget(self._fullSizeImage)
+
         # Create a label with just the filename for now
         self._fullSizeImage = QLabel()
 
@@ -194,9 +211,30 @@ class MainWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             # Reset the stack back to the scroll widget
             self._stack.setCurrentWidget(self._scroll)
+
             if self._fullSizeImage:
                 # Remove the maximised image from the stack
                 self._stack.removeWidget(self._fullSizeImage)
 
             # Indicate that the image is no longer maximised
             self._imageMaximised = False
+        elif event.key() == Qt.Key.Key_Right:
+            # Increment the current image index
+            self._currentImageIndex += 1
+
+            # Check bounds
+            if self._currentImageIndex >= len(self._imageList):
+                self._currentImageIndex = 0
+            
+            # Load the new image
+            self._MaximiseImage(self._imageList[self._currentImageIndex])
+        elif event.key() == Qt.Key.Key_Left:
+            # Increment the current image index
+            self._currentImageIndex -= 1
+
+            # Check bounds
+            if self._currentImageIndex < 0:
+                self._currentImageIndex = len(self._imageList) - 1
+            
+            # Load the new image
+            self._MaximiseImage(self._imageList[self._currentImageIndex])
