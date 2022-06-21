@@ -1,0 +1,127 @@
+
+from pathlib import Path
+from typing import Optional
+from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget
+from PyQt6.QtGui import QAction
+from PyQt6.QtCore import Qt
+
+from ImageViewer.Thumbnail import Thumbnail
+from ImageViewer.FileTypes import supportedExtensions
+
+class MainWindow(QMainWindow):
+    """Main Window."""
+    def __init__(self, label: str, parent:Optional[QWidget]=None):
+        """Initializer."""
+        super().__init__(parent)
+        self.setWindowTitle('Python Qt Image Viewer')
+
+        # Set up a scrollable area
+        self._scroll = QScrollArea()
+
+        # Set the scroll widget to be resizable
+        self._scroll.setWidgetResizable(True)
+
+        # Create a grid layout
+        self._grid = QGridLayout()
+
+        # Create a main widget
+        self._widget = QWidget()
+
+        # Attach the scroll area to the widget
+        self._scroll.setWidget(self._widget)
+
+        # Give the widget a grid layout
+        self._widget.setLayout(self._grid)
+
+        # Set the scroll widget to be the main widget
+        self.setCentralWidget(self._scroll)
+
+        # Create a menu (this doesn't seem to actually work just yet)
+        self._createMenu()
+
+        # Set the numner of thumbnails per row to 8
+        self._thumbnailsPerRow = 8
+
+        # Create a thumbnail list
+        self._thumbnailList: list[Thumbnail] = []
+
+        # Set the default path
+        self._defaultPath = Path('/Users/Steve/Pictures')
+
+    def _createMenu(self):
+        self.menu = self.menuBar()
+        closeAction = QAction('&Exit', self)
+        closeAction.triggered.connect(self.close) # type: ignore
+        self.fileMenu = self.menuBar().addMenu('File')
+        self.fileMenu.addAction(closeAction)
+        self.setMenuBar(self.menu)
+
+    def _GetImagePathList(self, imagePath: Path) -> list[Path]:
+        # Return the list of images Paths, sorted alphabetically (case insensitive)
+        return sorted([image for image in imagePath.iterdir() if image.suffix.lower() in supportedExtensions.values()], key=lambda x: x.name.lower())
+
+    def _GetFolderList(self, imagePath: Path) -> list[Path]:
+        # Get the list of non-hidden folders in this folder
+        folderList = sorted([path for path in imagePath.iterdir() if path.is_dir() and not path.name.startswith('.')], key=lambda x: x.name.lower())
+
+        # Insert the parent folder at the front of the list
+        folderList.insert(0, imagePath.parent)
+
+        # Return the list
+        return folderList
+
+    def SetLabels(self) -> None:
+        # Remove any old items from the grid layout
+        while self._grid.count():
+            # Removes the item
+            item = self._grid.takeAt(0)
+
+            # Set the parent to None to ensure ot gets hidden
+            item.widget().setParent(None) # type: ignore
+
+        # Clear down the thumbnail list
+        self._thumbnailList.clear()
+
+        # Get the list of folders in this folder
+        self._imageList = self._GetFolderList(self._defaultPath)
+
+        # Get the list of images in this folder and extend the folder list
+        self._imageList.extend(self._GetImagePathList(self._defaultPath))
+
+        # Calculate the thumbnail size
+        thumbnailSize = (self.width() // self._thumbnailsPerRow) - 2 * self._grid.getContentsMargins()[0]
+
+        # Initialise the default image (this should only actually happen once)
+        Thumbnail.InitialiseDefaultImage(thumbnailSize)
+
+        # Loop through the folders and images, creating a thumbnail for each
+        for count, imagePath in enumerate(self._imageList):
+            # Create the thumbnail, will only have the default or folder image for now
+            thumbnail = Thumbnail(imagePath)
+
+            #Work out the grid x and y position
+            startX = count // self._thumbnailsPerRow
+            startY = count % self._thumbnailsPerRow
+
+            # Add the thumbnail widget to the grid, aligning centrally
+            self._grid.addWidget(thumbnail, startX, startY, alignment=Qt.AlignmentFlag.AlignCenter)
+
+            # Append this to the list of thumbnails
+            self._thumbnailList.append(thumbnail)
+
+            # Connect the click on a thumbnail to this window
+            thumbnail.clicked.connect(self.thumbnailClicked)
+
+    def thumbnailClicked(self) -> None:
+        # Get the widget that was clicked
+        thumbnail = self.sender()
+
+        # Get the widget is actually a thumbnail
+        if isinstance(thumbnail, Thumbnail):
+            # if this widget represents a folder, update the path and load the new set of thumbnails
+            if thumbnail._imagePath.is_dir():
+                # Update the path
+                self._defaultPath = thumbnail._imagePath
+
+                # Clear and recreate the grid for this folder
+                self.SetLabels()
