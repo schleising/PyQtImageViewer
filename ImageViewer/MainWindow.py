@@ -144,6 +144,9 @@ class MainWindow(QMainWindow):
                 # Create a label with just the filename for now
                 self._fullSizeImage = QLabel(f'{thumbnail._imagePath.name}')
 
+                # Align the label in the centre of the window
+                self._fullSizeImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
                 # Add this widget to the stack
                 self._stack.addWidget(self._fullSizeImage)
 
