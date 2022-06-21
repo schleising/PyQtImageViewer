@@ -6,10 +6,8 @@ from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLab
 from PyQt6.QtGui import QAction, QKeyEvent, QPixmap
 from PyQt6.QtCore import Qt
 
-from PIL import Image
-from PIL.ImageQt import ImageQt
-
 from ImageViewer.Thumbnail import Thumbnail
+from ImageViewer.FullImage import FullImage
 from ImageViewer.FileTypes import supportedExtensions
 
 class MainWindow(QMainWindow):
@@ -166,22 +164,7 @@ class MainWindow(QMainWindow):
             self._stack.removeWidget(self._fullSizeImage)
 
         # Create a label with just the filename for now
-        self._fullSizeImage = QLabel()
-
-        # Use Pillow to open the image and convert to a QPixmap
-        pilImage = Image.open(imagePath)
-        qtImage = ImageQt(pilImage)
-        pixmap = QPixmap()
-        pixmap.convertFromImage(qtImage)
-
-        # Scale the image to the thumbnail size
-        currentImage = pixmap.scaled(self.size().width(), self.size().height(), aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
-
-        # Set the image to be the label pixmap
-        self._fullSizeImage.setPixmap(currentImage)
-
-        # Align the label in the centre of the window
-        self._fullSizeImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._fullSizeImage = FullImage(imagePath, self)
 
         # Add this widget to the stack
         self._stack.addWidget(self._fullSizeImage)
