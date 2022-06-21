@@ -15,7 +15,7 @@ class Thumbnail(QWidget):
     _defaultImagePath = 'ImageViewer/Resources/Loading Icon.png'
     _folderImagePath = 'ImageViewer/Resources/285658_blue_folder_icon.png'
     _defaultImage: Optional[QPixmap] = None
-    _folderImage: Optional[QPixmap] = None
+    _folderImage: Optional[ImageQt] = None
     _executor = ThreadPoolExecutor()
     _thumbnailSize = 0
     clicked = pyqtSignal()
@@ -44,6 +44,9 @@ class Thumbnail(QWidget):
         # Set the current image to None
         self._currentImage: Optional[QPixmap] = None
 
+        # The actual image
+        self._qtImage: Optional[ImageQt] = None
+        
         # Set the default image, withe loading or a folder
         self.SetDefaultImage()
 
@@ -52,7 +55,7 @@ class Thumbnail(QWidget):
         # Only do this is the class has not yet been initialised
         if not cls._initialised:
             # Set the thumbnail size of all thumbnails
-            cls._thumbnailSize = thumbnailSize
+            cls.UpdateThumbnailSize(thumbnailSize)
 
             # Read in the default image, using Pillow as it is quicker, and convert to a QPixmap
             pilImage = Image.open(cls._defaultImagePath)
@@ -65,15 +68,15 @@ class Thumbnail(QWidget):
 
             # Read in the folder image, using Pillow as it is quicker, and convert to a QPixmap
             pilImage = Image.open(cls._folderImagePath)
-            qtImage = ImageQt(pilImage)
-            folderPixmap = QPixmap()
-            folderPixmap.convertFromImage(qtImage)
-
-            # Scale the pixmap to the thumbnail size
-            cls._folderImage = folderPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
+            cls._folderImage = ImageQt(pilImage)
 
             # Show that the class is now initialised
             cls._initialised = True
+
+    @classmethod
+    def UpdateThumbnailSize(cls, thumbnailSize: int) -> None:
+        # Set the thumbnail size
+        cls._thumbnailSize = thumbnailSize
 
     def _ShortenLabelText(self, text: str) -> str:
         # Return a maximum of 15 characters for the filename (stem only)
@@ -90,8 +93,13 @@ class Thumbnail(QWidget):
         else:
             if self._folderImage:
                 # if this is a folder, set the folder image
-                self._thumbnailImage.setPixmap(self._folderImage)
-                self._currentImage = self._folderImage
+                folderPixmap = QPixmap()
+                folderPixmap.convertFromImage(self._folderImage)
+
+                # Scale the pixmap to the thumbnail size
+                currentFolderImage = folderPixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
+                self._thumbnailImage.setPixmap(currentFolderImage)
+                self._currentImage = currentFolderImage
 
         # Set the filename text
         self._thumbnailText.setText(self._ShortenLabelText(self._imagePath.stem))
@@ -103,9 +111,21 @@ class Thumbnail(QWidget):
     def _LoadImageInThread(self) -> None:
         # Use Pillow to open the image and convert to a QPixmap
         pilImage = Image.open(self._imagePath)
-        qtImage = ImageQt(pilImage)
+        self._qtImage = ImageQt(pilImage)
+
+        # Resize the image
+        self.ResizeImage()
+
+    def ResizeImage(self) -> None:
         pixmap = QPixmap()
-        pixmap.convertFromImage(qtImage)
+
+        # Check the Qt Image has been set
+        if self._qtImage:
+            # Convert the Qt Image into a QPixmap
+            pixmap.convertFromImage(self._qtImage)
+        elif self._folderImage:
+            # Convert the Qt Image into a QPixmap
+            pixmap.convertFromImage(self._folderImage)
 
         # Scale the image to the thumbnail size
         self._currentImage = pixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)

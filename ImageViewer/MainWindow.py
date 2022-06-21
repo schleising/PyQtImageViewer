@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
-from PyQt6.QtGui import QAction, QKeyEvent, QPixmap
+from PyQt6.QtGui import QAction, QKeyEvent, QResizeEvent
 from PyQt6.QtCore import Qt
 
 from ImageViewer.Thumbnail import Thumbnail
@@ -221,3 +221,16 @@ class MainWindow(QMainWindow):
             
             # Load the new image
             self._MaximiseImage(self._imageList[self._currentImageIndex])
+
+    def resizeEvent(self, a0: QResizeEvent) -> None:
+        super().resizeEvent(a0)
+
+        # Calculate the thumbnail size
+        thumbnailSize = (self.width() // self._thumbnailsPerRow) - 2 * self._grid.getContentsMargins()[0]
+
+        # Set the new thumbnail size
+        Thumbnail.UpdateThumbnailSize(thumbnailSize)
+
+        for thumbnail in self._thumbnailList:
+            # Resize each of the thumbnails
+            thumbnail.ResizeImage()
