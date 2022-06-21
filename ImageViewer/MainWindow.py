@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
             self._stack.removeWidget(self._fullSizeImage)
 
         # Create a label with just the filename for now
-        self._fullSizeImage = FullImage(imagePath, self)
+        self._fullSizeImage = FullImage(imagePath)
 
         # Add this widget to the stack
         self._stack.addWidget(self._fullSizeImage)
