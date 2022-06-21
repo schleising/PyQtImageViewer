@@ -1,8 +1,8 @@
 
 from pathlib import Path
 from typing import Optional
-from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget
-from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
+from PyQt6.QtGui import QAction, QKeyEvent
 from PyQt6.QtCore import Qt
 
 from ImageViewer.Thumbnail import Thumbnail
@@ -14,6 +14,9 @@ class MainWindow(QMainWindow):
         """Initializer."""
         super().__init__(parent)
         self.setWindowTitle('Python Qt Image Viewer')
+
+        # Set up a stacked widged
+        self._stack = QStackedWidget()
 
         # Set up a scrollable area
         self._scroll = QScrollArea()
@@ -33,8 +36,14 @@ class MainWindow(QMainWindow):
         # Give the widget a grid layout
         self._widget.setLayout(self._grid)
 
+        # Add the scollable area to the stack
+        self._stack.addWidget(self._scroll)
+
         # Set the scroll widget to be the main widget
-        self.setCentralWidget(self._scroll)
+        self.setCentralWidget(self._stack)
+
+        # Set the scollable widget to be the current one in the stack
+        self._stack.setCurrentWidget(self._scroll)
 
         # Create a menu (this doesn't seem to actually work just yet)
         self._createMenu()
@@ -47,6 +56,12 @@ class MainWindow(QMainWindow):
 
         # Set the default path
         self._defaultPath = Path.home() / 'Pictures'
+
+        # Setup a label for the full sized image
+        self._fullSizeImage: Optional[QLabel] = None
+
+        # Keep track of whether the image is maximised or not
+        self._imageMaximised = False
 
     def _createMenu(self):
         self.menu = self.menuBar()
@@ -125,3 +140,34 @@ class MainWindow(QMainWindow):
 
                 # Clear and recreate the grid for this folder
                 self.SetLabels()
+            else:
+                # Create a label with just the filename for now
+                self._fullSizeImage = QLabel(f'{thumbnail._imagePath.name}')
+
+                # Add this widget to the stack
+                self._stack.addWidget(self._fullSizeImage)
+
+                # Swap the stack to this widget
+                self._stack.setCurrentWidget(self._fullSizeImage)
+
+                # Log that we are in maximaised image mode
+                self._imageMaximised = True
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        super().keyPressEvent(event)
+
+        # Check for the user pressing escape
+        if event.key() == Qt.Key.Key_Escape:
+            # If the image is maximised
+            if self._imageMaximised:
+                # Reset the stack back to the scroll widget
+                self._stack.setCurrentWidget(self._scroll)
+                if self._fullSizeImage:
+                    # Remove the maximised image from the stack
+                    self._stack.removeWidget(self._fullSizeImage)
+
+                # Indocate that the image is no longer maximised
+                self._imageMaximised = False
+            else:
+                # If in file browser mode close the application
+                self.close()
