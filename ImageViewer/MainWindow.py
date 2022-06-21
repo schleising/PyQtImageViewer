@@ -1,9 +1,13 @@
 
 from pathlib import Path
 from typing import Optional
+
 from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
-from PyQt6.QtGui import QAction, QKeyEvent
+from PyQt6.QtGui import QAction, QKeyEvent, QPixmap
 from PyQt6.QtCore import Qt
+
+from PIL import Image
+from PIL.ImageQt import ImageQt
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FileTypes import supportedExtensions
@@ -141,36 +145,58 @@ class MainWindow(QMainWindow):
                 # Clear and recreate the grid for this folder
                 self.SetLabels()
             else:
-                # Create a label with just the filename for now
-                self._fullSizeImage = QLabel(f'{thumbnail._imagePath.name}')
+                self._MaximiseImage(thumbnail._imagePath)
 
-                # Align the label in the centre of the window
-                self._fullSizeImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def _MaximiseImage(self, imagePath: Path) -> None:
+        # Create a label with just the filename for now
+        self._fullSizeImage = QLabel()
 
-                # Add this widget to the stack
-                self._stack.addWidget(self._fullSizeImage)
+        # Use Pillow to open the image and convert to a QPixmap
+        pilImage = Image.open(imagePath)
+        qtImage = ImageQt(pilImage)
+        pixmap = QPixmap()
+        pixmap.convertFromImage(qtImage)
 
-                # Swap the stack to this widget
-                self._stack.setCurrentWidget(self._fullSizeImage)
+        # Scale the image to the thumbnail size
+        currentImage = pixmap.scaled(self.size().width(), self.size().height(), aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
 
-                # Log that we are in maximaised image mode
-                self._imageMaximised = True
+        # Set the image to be the label pixmap
+        self._fullSizeImage.setPixmap(currentImage)
+
+        # Align the label in the centre of the window
+        self._fullSizeImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Add this widget to the stack
+        self._stack.addWidget(self._fullSizeImage)
+
+        # Swap the stack to this widget
+        self._stack.setCurrentWidget(self._fullSizeImage)
+
+        # Log that we are in maximaised image mode
+        self._imageMaximised = True
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
-        # Check for the user pressing escape
-        if event.key() == Qt.Key.Key_Escape:
-            # If the image is maximised
-            if self._imageMaximised:
-                # Reset the stack back to the scroll widget
-                self._stack.setCurrentWidget(self._scroll)
-                if self._fullSizeImage:
-                    # Remove the maximised image from the stack
-                    self._stack.removeWidget(self._fullSizeImage)
+        if self._imageMaximised:
+            # If the image is maximised use the image key press handler
+            self._ImageKeyEvent(event)
+        else:
+            # Otherwise use the file browser key press handler
+            self._FileBrowserKeyEvent(event)
 
-                # Indocate that the image is no longer maximised
-                self._imageMaximised = False
-            else:
-                # If in file browser mode close the application
-                self.close()
+    def _FileBrowserKeyEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            # Close the application
+            self.close()
+
+    def _ImageKeyEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            # Reset the stack back to the scroll widget
+            self._stack.setCurrentWidget(self._scroll)
+            if self._fullSizeImage:
+                # Remove the maximised image from the stack
+                self._stack.removeWidget(self._fullSizeImage)
+
+            # Indicate that the image is no longer maximised
+            self._imageMaximised = False
