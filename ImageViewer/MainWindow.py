@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self._thumbnailList: list[Thumbnail] = []
 
         # Set the default path
-        self._defaultPath = Path('/Users/Steve/Pictures')
+        self._defaultPath = Path.home() / 'Pictures'
 
     def _createMenu(self):
         self.menu = self.menuBar()
