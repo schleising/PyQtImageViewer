@@ -3,9 +3,9 @@ from pathlib import Path
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PyQt6.QtWidgets import QLabel, QStackedWidget
-from PyQt6.QtGui import QPixmap, QResizeEvent
-from PyQt6.QtCore import Qt
+from PySide6.QtWidgets import QLabel, QStackedWidget
+from PySide6.QtGui import QPixmap, QResizeEvent
+from PySide6.QtCore import Qt
 
 class FullImage(QLabel):
     def __init__(self, imagePath: Path, parent=None):
@@ -40,8 +40,8 @@ class FullImage(QLabel):
             currentImage = self._pixmap.scaled(
                 parent.size().width(),
                 parent.size().height(),
-                aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio,
-                transformMode=Qt.TransformationMode.SmoothTransformation
+                aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
+                mode=Qt.TransformationMode.SmoothTransformation
             )
 
             # Set the image to be the pixmap

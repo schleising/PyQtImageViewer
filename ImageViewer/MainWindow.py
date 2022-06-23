@@ -2,9 +2,9 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
-from PyQt6.QtGui import QAction, QKeyEvent, QResizeEvent
-from PyQt6.QtCore import Qt
+from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
+from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent
+from PySide6.QtCore import Qt, QEvent
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
@@ -12,7 +12,7 @@ from ImageViewer.FileTypes import supportedExtensions
 
 class MainWindow(QMainWindow):
     """Main Window."""
-    def __init__(self, label: str, parent:Optional[QWidget]=None):
+    def __init__(self, args: Optional[str], parent:Optional[QWidget]=None):
         """Initializer."""
         super().__init__(parent)
         self.setWindowTitle('Python Qt Image Viewer')
@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(self._scroll)
 
         # Create a menu (this doesn't seem to actually work just yet)
-        self._createMenu()
+        # self._createMenu()
 
         # Set the numner of thumbnails per row to 8
         self._thumbnailsPerRow = 8
@@ -62,14 +62,38 @@ class MainWindow(QMainWindow):
         # Index of the current image
         self._currentImageIndex = 0
 
-        # Set the default path
-        self._defaultPath = Path.home() / 'Pictures'
-
         # Setup a label for the full sized image
         self._fullSizeImage: Optional[QLabel] = None
 
         # Keep track of whether the image is maximised or not
         self._imageMaximised = False
+
+        # Set the window position and size
+        self.setGeometry(300, 100, 1024, 768)
+
+        # If the argument is an image file, set this to be maximised
+        if args is not None:
+            # Turn the argument into a Path
+            imagePath = Path(args)
+
+            # Check whether the argument is actually a file and if so is a supported type
+            if imagePath.is_file() and imagePath.suffix in supportedExtensions.values():
+                self._currentPath = imagePath.parent
+                self.SetLabels()
+                # Show the image
+                self.ShowImage(imagePath)
+            elif imagePath.is_dir():
+                self._currentPath = imagePath
+                self.SetLabels()
+            else:
+                self._currentPath = imagePath.parent
+                self.SetLabels()
+        else:
+            self._currentPath = Path.home() / 'Pictures'
+            self.SetLabels()
+
+        # Show the window
+        self.show()
 
     def _createMenu(self):
         self.menu = self.menuBar()
@@ -81,14 +105,14 @@ class MainWindow(QMainWindow):
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
-        return sorted([image for image in self._defaultPath.iterdir() if image.suffix.lower() in supportedExtensions.values()], key=lambda x: x.name.lower())
+        return sorted([image for image in self._currentPath.iterdir() if image.suffix.lower() in supportedExtensions.values()], key=lambda x: x.name.lower())
 
     def _GetFolderList(self) -> list[Path]:
         # Get the list of non-hidden folders in this folder
-        folderList = sorted([path for path in self._defaultPath.iterdir() if path.is_dir() and not path.name.startswith('.')], key=lambda x: x.name.lower())
+        folderList = sorted([path for path in self._currentPath.iterdir() if path.is_dir() and not path.name.startswith('.')], key=lambda x: x.name.lower())
 
         # Insert the parent folder at the front of the list
-        folderList.insert(0, self._defaultPath.parent)
+        folderList.insert(0, self._currentPath.parent)
 
         # Return the list
         return folderList
@@ -125,12 +149,12 @@ class MainWindow(QMainWindow):
             # Create the thumbnail, will only have the default or folder image for now
             thumbnail = Thumbnail(imagePath)
 
-            #Work out the grid x and y position
-            startX = count // self._thumbnailsPerRow
-            startY = count % self._thumbnailsPerRow
+            # Work out the grid row and column
+            row = count // self._thumbnailsPerRow
+            column = count % self._thumbnailsPerRow
 
             # Add the thumbnail widget to the grid, aligning centrally
-            self._grid.addWidget(thumbnail, startX, startY, alignment=Qt.AlignmentFlag.AlignCenter)
+            self._grid.addWidget(thumbnail, row, column, alignment=Qt.AlignmentFlag.AlignCenter)
 
             # Append this to the list of thumbnails
             self._thumbnailList.append(thumbnail)
@@ -147,16 +171,19 @@ class MainWindow(QMainWindow):
             # if this widget represents a folder, update the path and load the new set of thumbnails
             if thumbnail._imagePath.is_dir():
                 # Update the path
-                self._defaultPath = thumbnail._imagePath
+                self._currentPath = thumbnail._imagePath
 
                 # Clear and recreate the grid for this folder
                 self.SetLabels()
             else:
-                # Maximise the selected image
-                self._MaximiseImage(thumbnail._imagePath)
+                self.ShowImage(thumbnail._imagePath)
 
-                # Get the index of this image in the image list
-                self._currentImageIndex = self._imageList.index(thumbnail._imagePath)
+    def ShowImage(self, imagePath: Path) -> None:
+        # Maximise the selected image
+        self._MaximiseImage(imagePath)
+
+        # Get the index of this image in the image list
+        self._currentImageIndex = self._imageList.index(imagePath)
 
     def _MaximiseImage(self, imagePath: Path) -> None:
         if self._imageMaximised and self._fullSizeImage:
@@ -234,3 +261,17 @@ class MainWindow(QMainWindow):
         for thumbnail in self._thumbnailList:
             # Resize each of the thumbnails
             thumbnail.ResizeImage()
+
+    def showFullScreen(self) -> None:
+        # super().showFullScreen()
+        print('Full Screen')
+
+    def showMaximized(self) -> None:
+        super().showMaximized()
+        print('Maximised')
+
+    def event(self, event: QEvent) -> bool:
+        # self.setVisible(True)
+
+        print(f'Event: {event.type()}')
+        return super().event(event)

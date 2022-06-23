@@ -2,9 +2,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout
-from PyQt6.QtGui import QPixmap, QMouseEvent
-from PyQt6.QtCore import Qt, pyqtSignal
+from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout
+from PySide6.QtGui import QPixmap, QMouseEvent
+from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
 from PIL.ImageQt import ImageQt
@@ -18,7 +18,7 @@ class Thumbnail(QWidget):
     _folderImage: Optional[ImageQt] = None
     _executor = ThreadPoolExecutor()
     _thumbnailSize = 0
-    clicked = pyqtSignal()
+    clicked = Signal()
 
     def __init__(self, imagePath: Path, parent: Optional[QWidget]=None):
         super().__init__(parent=parent)
@@ -64,7 +64,7 @@ class Thumbnail(QWidget):
             defaultPixmap.convertFromImage(qtImage)
 
             # Scale the pixmap to the thumbnail size
-            cls._defaultImage = defaultPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
+            cls._defaultImage = defaultPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
 
             # Read in the folder image, using Pillow as it is quicker, and convert to a QPixmap
             pilImage = Image.open(cls._folderImagePath)
@@ -97,7 +97,7 @@ class Thumbnail(QWidget):
                 folderPixmap.convertFromImage(self._folderImage)
 
                 # Scale the pixmap to the thumbnail size
-                currentFolderImage = folderPixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
+                currentFolderImage = folderPixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
                 self._thumbnailImage.setPixmap(currentFolderImage)
                 self._currentImage = currentFolderImage
 
@@ -128,7 +128,7 @@ class Thumbnail(QWidget):
             pixmap.convertFromImage(self._folderImage)
 
         # Scale the image to the thumbnail size
-        self._currentImage = pixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
+        self._currentImage = pixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
 
         if self._currentImage:
             # Set the image to be the label pixmap
