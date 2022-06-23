@@ -1,6 +1,7 @@
 {
     "exclude": [
         "**/build",
-        "**/dist"
+        "**/dist",
+        "**/macOS",
     ]
 }
