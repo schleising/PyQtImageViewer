@@ -50,18 +50,10 @@ if __name__ == '__main__':
     )
 
     # Log that the application has started
-    logging.log(logging.INFO, 'Application started')
+    logging.log(logging.INFO, f'Application started: {sys.argv}')
 
     # The main application
     app = PyQtImageViewer(sys.argv)
-
-    # Check for command line arguments
-    if len(sys.argv) > 1:
-        # Send the argument to the Main Window
-        args = sys.argv[1]
-    else:
-        # Indicate that there are no arguments
-        args = None
 
     # Create the main window
     window = MainWindow()
