@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
         self._fileOpenReceived = True
 
         # Log that the signal has been received
-        logging.log(logging.DEBUG, 'Wnd: Signal Received')
+        logging.log(logging.INFO, f'Wnd: File Open Signal Received: {imagePath}')
 
         # Set the current path to the parent of this one
         self._currentPath = imagePath.parent

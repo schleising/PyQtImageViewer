@@ -1,12 +1,14 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
+import logging
 
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
 from PySide6.QtGui import QPixmap, QMouseEvent
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
+import PIL.WebPImagePlugin as _
 from PIL.ImageQt import ImageQt
 
 class Thumbnail(QWidget):
@@ -140,15 +142,29 @@ class Thumbnail(QWidget):
         self._executor.submit(self._LoadImageInThread)
 
     def _LoadImageInThread(self) -> None:
+        # Log that the image load has started
+        logging.log(logging.DEBUG, f'Loading Image {self._imagePath}')
+
         # Use Pillow to open the image and convert to a QPixmap
         pilImage = Image.open(self._imagePath)
+
+        # Log that PIL the image load has completed
+        logging.log(logging.DEBUG, f'PIL Loaded {self._imagePath}')
+
+        # Convert the PIL image to a QImage
         self._qtImage = ImageQt(pilImage)
+
+        # Log that the QImage conversion has completed
+        logging.log(logging.DEBUG, f'Qt Converted {self._imagePath}')
 
         # Resize the image
         self.ResizeImage()
 
     def ResizeImage(self) -> None:
         pixmap = QPixmap()
+
+        # Log that the image has been loaded and we are ready to resize it to fit the label
+        logging.log(logging.DEBUG, f'Resizing Image {self._imagePath}')
 
         # Check the Qt Image has been set
         if self._qtImage:
@@ -167,6 +183,9 @@ class Thumbnail(QWidget):
 
             # Emit signal to indicate that the image has loaded and the opacity can be reset to 100%
             self.loaded.emit()
+
+            # Log that the load is complete
+            logging.log(logging.DEBUG, f'Loaded Image {self._imagePath}')
 
     def ImageLoaded(self) -> None:
         # The image has been loaded so we can now reset the opacity to 100%
