@@ -25,12 +25,12 @@ logging.basicConfig(
 
 logging.log(logging.DEBUG, f'argv: {sys.argv}')
 
-app = QApplication()
+app = QApplication(sys.argv)
 
 window = TrialWindow()
 window.label.setText(str(sys.argv))
 
 window.show()
 
-sys.exit(app.exec_())
+sys.exit(app.exec())
 # print('Hello')

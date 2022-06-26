@@ -1,16 +1,20 @@
 
 from pathlib import Path
 from typing import Optional
+import logging
 
 from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
 from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent
-from PySide6.QtCore import Qt, QEvent
+from PySide6.QtCore import Qt, Signal
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
 from ImageViewer.FileTypes import supportedExtensions
 
 class MainWindow(QMainWindow):
+    # Create a signal for the file open event 
+    fileOpenedSignal = Signal(Path)
+
     """Main Window."""
     def __init__(self, args: Optional[str], parent:Optional[QWidget]=None):
         """Initializer."""
@@ -46,6 +50,9 @@ class MainWindow(QMainWindow):
 
         # Set the scollable widget to be the current one in the stack
         self._stack.setCurrentWidget(self._scroll)
+
+        # Connect the file open signal to FileOpened
+        self.fileOpenedSignal.connect(self.FileOpened)
 
         # Create a menu (this doesn't seem to actually work just yet)
         # self._createMenu()
@@ -178,6 +185,19 @@ class MainWindow(QMainWindow):
             else:
                 self.ShowImage(thumbnail._imagePath)
 
+    def FileOpened(self, imagePath: Path) -> None:
+        # Log that the signal has been received
+        logging.log(logging.DEBUG, 'Wnd: Signal Received')
+
+        # Set the current path to the parent of this one
+        self._currentPath = imagePath.parent
+
+        # Initialise the file browser to the parent path
+        self.SetLabels()
+
+        # Show the selected image maximised
+        self.ShowImage(imagePath)
+
     def ShowImage(self, imagePath: Path) -> None:
         # Maximise the selected image
         self._MaximiseImage(imagePath)
@@ -261,17 +281,3 @@ class MainWindow(QMainWindow):
         for thumbnail in self._thumbnailList:
             # Resize each of the thumbnails
             thumbnail.ResizeImage()
-
-    def showFullScreen(self) -> None:
-        # super().showFullScreen()
-        print('Full Screen')
-
-    def showMaximized(self) -> None:
-        super().showMaximized()
-        print('Maximised')
-
-    def event(self, event: QEvent) -> bool:
-        # self.setVisible(True)
-
-        print(f'Event: {event.type()}')
-        return super().event(event)
