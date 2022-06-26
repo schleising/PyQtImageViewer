@@ -5,7 +5,7 @@ import logging
 
 from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
 from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
@@ -54,6 +54,9 @@ class MainWindow(QMainWindow):
         # Connect the file open signal to FileOpened
         self.fileOpenedSignal.connect(self.FileOpened)
 
+        # We have not yet received a file open event
+        self._fileOpenReceived = False
+
         # Create a menu (this doesn't seem to actually work just yet)
         # self._createMenu()
 
@@ -78,26 +81,11 @@ class MainWindow(QMainWindow):
         # Set the window position and size
         self.setGeometry(300, 100, 1024, 768)
 
-        # If the argument is an image file, set this to be maximised
-        if args is not None:
-            # Turn the argument into a Path
-            imagePath = Path(args)
+        # Set the default path
+        self._currentPath = Path.home() / 'Pictures'
 
-            # Check whether the argument is actually a file and if so is a supported type
-            if imagePath.is_file() and imagePath.suffix in supportedExtensions.values():
-                self._currentPath = imagePath.parent
-                self.SetLabels()
-                # Show the image
-                self.ShowImage(imagePath)
-            elif imagePath.is_dir():
-                self._currentPath = imagePath
-                self.SetLabels()
-            else:
-                self._currentPath = imagePath.parent
-                self.SetLabels()
-        else:
-            self._currentPath = Path.home() / 'Pictures'
-            self.SetLabels()
+        # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
+        QTimer.singleShot(150, self.StartUpTimerExpired)
 
         # Show the window
         self.show()
@@ -186,6 +174,9 @@ class MainWindow(QMainWindow):
                 self.ShowImage(thumbnail._imagePath)
 
     def FileOpened(self, imagePath: Path) -> None:
+        # Show that ab file has been opened
+        self._fileOpenReceived = True
+
         # Log that the signal has been received
         logging.log(logging.DEBUG, 'Wnd: Signal Received')
 
@@ -197,6 +188,15 @@ class MainWindow(QMainWindow):
 
         # Show the selected image maximised
         self.ShowImage(imagePath)
+
+    def StartUpTimerExpired(self) -> None:
+        # Log the the timeout has expired
+        logging.log(logging.INFO, 'Wnd: Startup timeout expired')
+
+        # If we haven't already received a file open event
+        if not self._fileOpenReceived:
+            # Load the browser at the default location
+            self.SetLabels()
 
     def ShowImage(self, imagePath: Path) -> None:
         # Maximise the selected image
