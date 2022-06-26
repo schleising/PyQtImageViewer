@@ -65,7 +65,7 @@ if __name__ == '__main__':
         args = None
 
     # Create the main window
-    window = MainWindow(args)
+    window = MainWindow()
 
     # Get the file opened signal
     app.fileOpenedSignal = window.fileOpenedSignal

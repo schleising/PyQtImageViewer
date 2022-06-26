@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
     fileOpenedSignal = Signal(Path)
 
     """Main Window."""
-    def __init__(self, args: Optional[str], parent:Optional[QWidget]=None):
+    def __init__(self, parent:Optional[QWidget]=None):
         """Initializer."""
         super().__init__(parent)
         self.setWindowTitle('Python Qt Image Viewer')
