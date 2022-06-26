@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
 from PySide6.QtGui import QPixmap, QMouseEvent
 from PySide6.QtCore import Qt, Signal
 
@@ -11,14 +11,33 @@ from PIL.ImageQt import ImageQt
 
 class Thumbnail(QWidget):
     # Class variables
+
+    # Has this class been inintialised
     _initialised = False
+
+    # Default loading icon image
     _defaultImagePath = 'ImageViewer/Resources/Loading Icon.png'
+
+    # Default folder image
     _folderImagePath = 'ImageViewer/Resources/285658_blue_folder_icon.png'
+
+    # QPixmap for default loading image
     _defaultImage: Optional[QPixmap] = None
+
+    # ImageQt for folder image
     _folderImage: Optional[ImageQt] = None
+
+    # Threads for loading the images
     _executor = ThreadPoolExecutor()
+
+    # Default the thumbnail size to 0
     _thumbnailSize = 0
+
+    # Signal emitted when this widget is clicked
     clicked = Signal()
+
+    # Signal emitted when the image is fully loaded to set opacity back to 100%
+    loaded = Signal()
 
     def __init__(self, imagePath: Path, parent: Optional[QWidget]=None):
         super().__init__(parent=parent)
@@ -88,6 +107,18 @@ class Thumbnail(QWidget):
                 # if this is a file, set the default loading image for now
                 self._thumbnailImage.setPixmap(self._defaultImage)
 
+                # Get an opacity effect
+                opacityEffect = QGraphicsOpacityEffect(self)
+
+                # Set the opacity to 20%
+                opacityEffect.setOpacity(0.2)
+
+                # Add this effect to the widget
+                self.setGraphicsEffect(opacityEffect)
+
+                # Connect the signal for the image load complete message
+                self.loaded.connect(self.ImageLoaded)
+
                 # Initiate the load of the actual image in another thread
                 self._LoadImage()
         else:
@@ -133,6 +164,17 @@ class Thumbnail(QWidget):
         if self._currentImage:
             # Set the image to be the label pixmap
             self._thumbnailImage.setPixmap(self._currentImage)
+
+            # Emit signal to indicate that the image has loaded and the opacity can be reset to 100%
+            self.loaded.emit()
+
+    def ImageLoaded(self) -> None:
+        # The image has been loaded so we can now reset the opacity to 100%
+        opacityEffect = QGraphicsOpacityEffect(self)
+        opacityEffect.setOpacity(1.0)
+
+        # Set the new graohics effect on the widget
+        self.setGraphicsEffect(opacityEffect)
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         super().mousePressEvent(a0)

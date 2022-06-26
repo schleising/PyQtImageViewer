@@ -42,19 +42,18 @@ class PyQtImageViewer(QApplication):
         return super().event(event)
 
 if __name__ == '__main__':
+    # Set up logging
     logging.basicConfig(
         filename=Path.home() / f'.PyQtImageViewer {datetime.now().strftime("%y-%m-%d %H.%M.%S")}.txt',
         level=logging.INFO,
         format='%(asctime)s:%(levelname)s:%(message)s'
     )
 
+    # Log that the application has started
     logging.log(logging.INFO, 'Application started')
 
     # The main application
     app = PyQtImageViewer(sys.argv)
-
-    # Set the application to use OpenGL ES, seems to prevent a black screen when going to full screen
-    # app.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL)
 
     # Check for command line arguments
     if len(sys.argv) > 1:
@@ -73,11 +72,9 @@ if __name__ == '__main__':
     # Run the application loop
     sys.exit(app.exec())
 
-#TODO: Handle command line arguments
 #TODO: Better image transitions
 #TODO: Crop images
 #TODO: Implement filters
-#TODO: Dim loading icons
 #TODO: Keyboard filebrowser navigation
 #TODO: ESC to quit, Up to go back to filebrowser
 #TODO: Implement menu
