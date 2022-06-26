@@ -8,8 +8,10 @@ from PySide6.QtGui import QPixmap, QMouseEvent
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
-import PIL.WebPImagePlugin as _
 from PIL.ImageQt import ImageQt
+
+# This seems to be necessary to ensure webp images can be loaded at startup
+import PIL.WebPImagePlugin as _
 
 class Thumbnail(QWidget):
     # Class variables
