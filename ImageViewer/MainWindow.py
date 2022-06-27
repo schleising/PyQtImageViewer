@@ -235,7 +235,10 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
-        if self._imageMaximised:
+        if event.key() == Qt.Key.Key_Escape:
+            # Close application on Escape
+            self.close()
+        elif self._imageMaximised:
             # If the image is maximised use the image key press handler
             self._ImageKeyEvent(event)
         else:
@@ -243,12 +246,10 @@ class MainWindow(QMainWindow):
             self._FileBrowserKeyEvent(event)
 
     def _FileBrowserKeyEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Escape:
-            # Close the application
-            self.close()
+        pass
 
     def _ImageKeyEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Escape:
+        if event.key() == Qt.Key.Key_Up:
             # Reset the stack back to the scroll widget
             self._stack.setCurrentWidget(self._scroll)
 

@@ -74,7 +74,6 @@ if __name__ == '__main__':
 #TODO: Crop images
 #TODO: Implement filters
 #TODO: Keyboard filebrowser navigation
-#TODO: ESC to quit, Up to go back to filebrowser
 #TODO: Implement menu
 #TODO: Implement help
 #TODO: More text as thumbnails get bigger
