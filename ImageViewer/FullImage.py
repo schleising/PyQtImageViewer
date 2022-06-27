@@ -28,21 +28,16 @@ class FullImage(QLabel):
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
-        # Get the parent of this widget, should be a QStackedWidget
-        parent = self.parent()
+        # Convert the PIL qtImage into a QPixmap
+        self._pixmap.convertFromImage(self._qtImage)
 
-        # Check this is a QStackedWidget
-        if isinstance(parent, QStackedWidget):
-            # Convert the PIL qtImage into a QPixmap
-            self._pixmap.convertFromImage(self._qtImage)
+        # Scale the pixmap to the window size
+        currentImage = self._pixmap.scaled(
+            self.size().width(),
+            self.size().height(),
+            aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
+            mode=Qt.TransformationMode.SmoothTransformation
+        )
 
-            # Scale the pixmap to the window size
-            currentImage = self._pixmap.scaled(
-                parent.size().width(),
-                parent.size().height(),
-                aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
-                mode=Qt.TransformationMode.SmoothTransformation
-            )
-
-            # Set the image to be the pixmap
-            self.setPixmap(currentImage)
+        # Set the image to be the pixmap
+        self.setPixmap(currentImage)
