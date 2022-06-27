@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 import logging
 
-from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget
+from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget, QMenu
 from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent
 from PySide6.QtCore import Qt, Signal, QTimer
 
@@ -57,9 +57,6 @@ class MainWindow(QMainWindow):
         # We have not yet received a file open event
         self._fileOpenReceived = False
 
-        # Create a menu (this doesn't seem to actually work just yet)
-        # self._createMenu()
-
         # Set the numner of thumbnails per row to 8
         self._thumbnailsPerRow = 8
 
@@ -87,16 +84,44 @@ class MainWindow(QMainWindow):
         # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
+        # Get the menubar
+        self._menuBar = self.menuBar()
+
+        # The image menu
+        self._imageMenu: Optional[QMenu] = None
+
+        # Create a Next acion to call _nextImage
+        self._nextAction = QAction('Next', self)
+
+        # Create a Previous acion to call _prevImage
+        self._prevAction = QAction('Previous', self)
+
+        # Add a menu for previous and next images, disabled to start with
+        self._addImageMenu()
+
         # Show the window
         self.show()
 
-    def _createMenu(self):
-        self.menu = self.menuBar()
-        closeAction = QAction('&Exit', self)
-        closeAction.triggered.connect(self.close) # type: ignore
-        self.fileMenu = self.menuBar().addMenu('File')
-        self.fileMenu.addAction(closeAction)
-        self.setMenuBar(self.menu)
+    def _menuTest(self) -> None:
+        print('Test')
+
+    def _addImageMenu(self):
+        # Create the Image menu
+        self._imageMenu = self._menuBar.addMenu('Image')
+
+        # Create a Next acion to call _nextImage
+        self._nextAction.triggered.connect(self._nextImage) # type: ignore
+
+        # Create a Previous acion to call _prevImage
+        self._prevAction.triggered.connect(self._prevImage) # type: ignore
+
+        # Add the actions to the Image Menu
+        self._imageMenu.addAction(self._nextAction)
+        self._imageMenu.addAction(self._prevAction)
+
+        # Disable the actions for now
+        self._nextAction.setEnabled(False)
+        self._prevAction.setEnabled(False)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
@@ -229,6 +254,10 @@ class MainWindow(QMainWindow):
         # Swap the stack to this widget
         self._stack.setCurrentWidget(self._fullSizeImage)
 
+        # Enable the previous and next image actions
+        self._nextAction.setEnabled(True)
+        self._prevAction.setEnabled(True)
+
         # Log that we are in maximaised image mode
         self._imageMaximised = True
 
@@ -253,6 +282,10 @@ class MainWindow(QMainWindow):
             # Reset the stack back to the scroll widget
             self._stack.setCurrentWidget(self._scroll)
 
+            # Disable the previous and next image actions
+            self._nextAction.setEnabled(False)
+            self._prevAction.setEnabled(False)
+
             if self._fullSizeImage:
                 # Remove the maximised image from the stack
                 self._stack.removeWidget(self._fullSizeImage)
@@ -260,25 +293,33 @@ class MainWindow(QMainWindow):
             # Indicate that the image is no longer maximised
             self._imageMaximised = False
         elif event.key() == Qt.Key.Key_Right:
-            # Increment the current image index
-            self._currentImageIndex += 1
-
-            # Check bounds
-            if self._currentImageIndex >= len(self._imageList):
-                self._currentImageIndex = 0
-            
-            # Load the new image
-            self._MaximiseImage(self._imageList[self._currentImageIndex])
+            # Show the next image
+            self._nextImage()
         elif event.key() == Qt.Key.Key_Left:
-            # Increment the current image index
-            self._currentImageIndex -= 1
+            # Show the previous image
+            self._prevImage()
 
-            # Check bounds
-            if self._currentImageIndex < 0:
-                self._currentImageIndex = len(self._imageList) - 1
-            
-            # Load the new image
-            self._MaximiseImage(self._imageList[self._currentImageIndex])
+    def _nextImage(self) -> None:
+        # Increment the current image index
+        self._currentImageIndex += 1
+
+        # Check bounds
+        if self._currentImageIndex >= len(self._imageList):
+            self._currentImageIndex = 0
+        
+        # Load the new image
+        self._MaximiseImage(self._imageList[self._currentImageIndex])
+
+    def _prevImage(self) -> None:
+        # Increment the current image index
+        self._currentImageIndex -= 1
+
+        # Check bounds
+        if self._currentImageIndex < 0:
+            self._currentImageIndex = len(self._imageList) - 1
+        
+        # Load the new image
+        self._MaximiseImage(self._imageList[self._currentImageIndex])
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
