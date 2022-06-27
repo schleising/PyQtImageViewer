@@ -139,6 +139,9 @@ class MainWindow(QMainWindow):
         # Initialise the default image (this should only actually happen once)
         Thumbnail.InitialiseDefaultImage(thumbnailSize)
 
+        # Store up the number of rows added
+        row: int = 0
+
         # Loop through the folders and images, creating a thumbnail for each
         for count, imagePath in enumerate(fileList):
             # Create the thumbnail, will only have the default or folder image for now
@@ -156,6 +159,13 @@ class MainWindow(QMainWindow):
 
             # Connect the click on a thumbnail to this window
             thumbnail.clicked.connect(self.thumbnailClicked)
+
+        if row == 0:
+            # If there is only one row, align all items to the top left
+            self._grid.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        else:
+            # Otherwise align just to the top
+            self._grid.setAlignment(Qt.AlignTop)
 
     def thumbnailClicked(self) -> None:
         # Get the widget that was clicked
