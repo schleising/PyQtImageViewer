@@ -62,7 +62,13 @@ if __name__ == '__main__':
     app.fileOpenedSignal = window.fileOpenedSignal
 
     # Run the application loop
-    sys.exit(app.exec())
+    exitCode = app.exec()
+
+    # Log that we are exiting the application
+    logging.log(logging.INFO, f'Exiting application with code: {exitCode}')
+
+    # Exit the application
+    sys.exit(exitCode)
 
 #TODO: Better image transitions
 #TODO: Crop images
