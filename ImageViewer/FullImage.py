@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QLabel, QStackedWidget
+from PySide6.QtWidgets import QLabel
 from PySide6.QtGui import QPixmap, QResizeEvent
 from PySide6.QtCore import Qt
 
