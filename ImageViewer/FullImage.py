@@ -4,9 +4,9 @@ from typing import Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem
-from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
+from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
+from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR
 
@@ -53,6 +53,12 @@ class FullImage(QGraphicsView):
 
         # Indicate that Control is held down
         self._ctrlHeld = False
+
+        # A point for the start of the drag
+        self._startDragPoint: Optional[QPoint] = None
+
+        # A graphics rect item for the selection rectangle
+        self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
     def _LoadPixmap(self) -> QGraphicsPixmapItem:
         # Use Pillow to open the image and convert to a QPixmap
@@ -107,6 +113,9 @@ class FullImage(QGraphicsView):
             # Set control held to True
             self._ctrlHeld = True
 
+            # Store the point of the start of the drag
+            self._startDragPoint = self.mapFromGlobal(QCursor().pos())
+
             # Set the drag mode to no drag
             self.setDragMode(QGraphicsView.DragMode.NoDrag)
 
@@ -123,4 +132,31 @@ class FullImage(QGraphicsView):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
 
-        # print(event.pos().x(), event.pos().y())
+        if self._startDragPoint is not None and self._ctrlHeld:
+            if self._graphicsRectItem is not None:
+                # Remove the existing graphics rect item
+                self._scene.removeItem(self._graphicsRectItem)
+
+            # Get the cursor position in scene coordinates
+            sceneCursorPos = self.mapToScene(self.mapFromGlobal(QCursor().pos()))
+
+            # Get the start drag point in scene coordinates
+            sceneStartDragPoint = self.mapToScene(self._startDragPoint)
+
+            # Get the top left point (min of both xs and ys)
+            topLeft = QPointF(min(sceneStartDragPoint.x(), sceneCursorPos.x()), min(sceneStartDragPoint.y(), sceneCursorPos.y()))
+
+            # Get the bottom left point (max of both xs and ys)
+            bottomRight = QPointF(max(sceneStartDragPoint.x(), sceneCursorPos.x()), max(sceneStartDragPoint.y(), sceneCursorPos.y()))
+
+            # Create a rect from these two points
+            rect = QRectF(topLeft, bottomRight)
+
+            # Add the rect to the scene
+            self._graphicsRectItem = self._scene.addRect(rect)
+
+            # Set the outline to blue
+            self._graphicsRectItem.setPen(QColor(Qt.blue))
+
+            # Set the fill to dodger blue, 50% opaque
+            self._graphicsRectItem.setBrush(QColor(30, 144, 255, 128))
