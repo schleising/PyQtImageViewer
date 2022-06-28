@@ -12,10 +12,13 @@ class FullImage(QScrollArea):
     def __init__(self, imagePath: Path, parent=None):
         super().__init__(parent=parent)
 
+        # Create a label for the image
         self._label = QLabel()
-        self.setMinimumSize(10,10)
 
+        # Ensure the scroll area is resizable
         self.setWidgetResizable(True)
+
+        # Add the image label to the scroll area
         self.setWidget(self._label)
 
         # Set the image path
@@ -32,7 +35,7 @@ class FullImage(QScrollArea):
         # Align the label in the centre of the window
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Used for mouse dragging
+        # Last mouse position, used for mouse dragging
         self._lastMousePos: Optional[QPoint] = None
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
@@ -56,35 +59,42 @@ class FullImage(QScrollArea):
         super().wheelEvent(event)
 
         if event.angleDelta().y() > 0:
-            currentImage = self._pixmap.scaled(int(1.1 * self._label.pixmap().size().width()), int(1.1 * self._label.pixmap().size().height()))
+            # If the mouse wheel scroll is positive, zoom in
+            currentImage = self._pixmap.scaled(int(self._label.pixmap().size().width() * 1.1), int(self._label.pixmap().size().height() * 1.1))
             self._label.setPixmap(currentImage)
         elif event.angleDelta().y() < 0:
+            # If the mouse wheel scroll is negative, zoom out
             currentImage = self._pixmap.scaled(int(self._label.pixmap().size().width() / 1.1), int(self._label.pixmap().size().height() / 1.1))
             self._label.setPixmap(currentImage)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
 
+        # Check it is the left button which has been clicked
         if event.button() == Qt.MouseButton.LeftButton:
-            print(f'Button Clicked: {event.pos()}')
+            # Store the click position
             self._lastMousePos = event.pos()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         super().mouseReleaseEvent(event)
 
+        # Check it is the left mouse button which has been released
         if event.button() == Qt.MouseButton.LeftButton:
-            print(f'Button Released')
+            # Clear the last mouse position
             self._lastMousePos = None
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
 
+        # Check we have a last mouse position and the left button is held
         if self._lastMousePos is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            # Work out how far we've moved in x and y
             dx = event.pos().x() - self._lastMousePos.x()
             dy = event.pos().y() - self._lastMousePos.y()
+
+            # Store the current mouse position
             self._lastMousePos = event.pos()
 
-            print(f'dx: {dx}, dy: {dy}')
-
+            # Adjust the scroll bars by the dx and dy values
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - dx)
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
