@@ -4,9 +4,9 @@ from typing import Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsItem
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent
-from PySide6.QtCore import Qt, QPoint, Signal
+from PySide6.QtCore import Qt, Signal
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR
 
@@ -42,6 +42,9 @@ class FullImage(QGraphicsView):
         # Load the image, convert it to a pixmap and add it to the scene
         self._pixmapGraphicsItem = self._LoadPixmap()
 
+        # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
+        self._pixmapGraphicsItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
+
         # Indicate whether we have zoomed in at all
         self._zoomed = False
 
@@ -51,7 +54,7 @@ class FullImage(QGraphicsView):
         # Indicate that Control is held down
         self._ctrlHeld = False
 
-    def _LoadPixmap(self) -> QGraphicsItem:
+    def _LoadPixmap(self) -> QGraphicsPixmapItem:
         # Use Pillow to open the image and convert to a QPixmap
         pilImage = Image.open(self._imagePath)
 
@@ -61,7 +64,7 @@ class FullImage(QGraphicsView):
         # Convert the QImage to a Pixmap
         self._pixmap.convertFromImage(self._qtImage)
 
-        # Add the pixmap to the scene
+        # Add the pixmap to the scene and return the QGraphicsPixmapItem
         return self._scene.addPixmap(self._pixmap)
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
