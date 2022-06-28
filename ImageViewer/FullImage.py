@@ -4,38 +4,37 @@ from typing import Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QLabel, QScrollArea
-from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView
+from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent
+from PySide6.QtCore import Qt, QPoint, Signal
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR
 
-class FullImage(QScrollArea):
+class FullImage(QGraphicsView):
+    # Signal to return to browser
+    returnToBrowser = Signal()
+
+    # Signals for previous and next images
+    previousImage = Signal()
+    nextImage = Signal()
+
     def __init__(self, imagePath: Path, parent=None):
         super().__init__(parent=parent)
-
-        # Create a label for the image
-        self._label = QLabel()
-
-        # Ensure the scroll area is resizable
-        self.setWidgetResizable(True)
-
-        # Add the image label to the scroll area
-        self.setWidget(self._label)
 
         # Set the image path
         self._imagePath = imagePath
 
-        # Set the minimum size of this label to 1 pixel by 1 pixel
-        self.setMinimumSize(1, 1)
-
-        # Use Pillow to open the image and convert to a QPixmap
-        pilImage = Image.open(imagePath)
-        self._qtImage = ImageQt(pilImage)
+        # Create a pixmap to hold the image
         self._pixmap = QPixmap()
 
-        # Align the label in the centre of the window
-        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Create a graphics scene for this graphics view
+        self._scene = QGraphicsScene()
+
+        # Add the scene to the view
+        self.setScene(self._scene)
+
+        # Load the image, convert it to a pixmap and add it to the scene
+        self._LoadPixmap()
 
         # Last mouse position, used for mouse dragging
         self._lastMousePos: Optional[QPoint] = None
@@ -43,48 +42,58 @@ class FullImage(QScrollArea):
         # Store how much the current image is scaled
         self._currentScale: float = 1.0
 
+    def _LoadPixmap(self) -> None:
+        # Use Pillow to open the image and convert to a QPixmap
+        pilImage = Image.open(self._imagePath)
+
+        # Convert to a QImage
+        self._qtImage = ImageQt(pilImage)
+
+        # Convert the QImage to a Pixmap
+        self._pixmap.convertFromImage(self._qtImage)
+
+        # Add the pixmap to the scene
+        self._scene.addPixmap(self._pixmap)
+
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
-        # Convert the PIL qtImage into a QPixmap
-        self._pixmap.convertFromImage(self._qtImage)
+        # # Convert the PIL qtImage into a QPixmap
+        # self._pixmap.convertFromImage(self._qtImage)
 
-        # Scale the pixmap to the window size
-        currentImage = self._pixmap.scaled(
-            self.size().width(),
-            self.size().height(),
-            aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
-            mode=Qt.TransformationMode.SmoothTransformation
-        )
-
-        # Set the image to be the pixmap
-        self._label.setPixmap(currentImage)
+        # # Scale the pixmap to the window size
+        # currentImage = self._pixmap.scaled(
+        #     self.size().width(),
+        #     self.size().height(),
+        #     aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
+        #     mode=Qt.TransformationMode.SmoothTransformation
+        # )
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
 
         if event.angleDelta().y() > 0:
             # If the mouse wheel scroll is positive, zoom in
-            currentImage = self._pixmap.scaled(
-                int(self._label.pixmap().size().width() * ZOOM_SCALE_FACTOR),
-                int(self._label.pixmap().size().height() * ZOOM_SCALE_FACTOR)
-            )
+            # currentImage = self._pixmap.scaled(
+            #     int(self._label.pixmap().size().width() * ZOOM_SCALE_FACTOR),
+            #     int(self._label.pixmap().size().height() * ZOOM_SCALE_FACTOR)
+            # )
 
-            # Add the new image to the label
-            self._label.setPixmap(currentImage)
+            # # Add the new image to the label
+            # self._label.setPixmap(currentImage)
 
             # Update the current scale value
             self._currentScale *= ZOOM_SCALE_FACTOR
 
         elif event.angleDelta().y() < 0:
             # If the mouse wheel scroll is negative, zoom out
-            currentImage = self._pixmap.scaled(
-                int(self._label.pixmap().size().width() / ZOOM_SCALE_FACTOR),
-                int(self._label.pixmap().size().height() / ZOOM_SCALE_FACTOR)
-            )
+            # currentImage = self._pixmap.scaled(
+            #     int(self._label.pixmap().size().width() / ZOOM_SCALE_FACTOR),
+            #     int(self._label.pixmap().size().height() / ZOOM_SCALE_FACTOR)
+            # )
 
-            # Add the new image to the label
-            self._label.setPixmap(currentImage)
+            # # Add the new image to the label
+            # self._label.setPixmap(currentImage)
 
             # Update the current scale value
             self._currentScale /= ZOOM_SCALE_FACTOR
@@ -120,3 +129,16 @@ class FullImage(QScrollArea):
             # Adjust the scroll bars by the dx and dy values
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - dx)
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        # super().keyPressEvent(event)
+
+        if event.key() == Qt.Key.Key_Up:
+            # Send the return to browser signal
+            self.returnToBrowser.emit()
+        elif event.key() == Qt.Key.Key_Left:
+            # Send the previous image signal
+            self.previousImage.emit()
+        elif event.key() == Qt.Key.Key_Right:
+            # Send the next image signal
+            self.nextImage.emit()

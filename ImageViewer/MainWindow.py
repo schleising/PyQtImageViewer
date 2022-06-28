@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         self._currentImageIndex = 0
 
         # Setup a widget for the full sized image
-        self._fullSizeImage: Optional[QWidget] = None
+        self._fullSizeImage: Optional[FullImage] = None
 
         # Keep track of whether the image is maximised or not
         self._imageMaximised = False
@@ -248,6 +248,11 @@ class MainWindow(QMainWindow):
         # Create a label with just the filename for now
         self._fullSizeImage = FullImage(imagePath)
 
+        # Connect the signals
+        self._fullSizeImage.returnToBrowser.connect(self._returnToBrowser)
+        self._fullSizeImage.previousImage.connect(self._prevImage)
+        self._fullSizeImage.nextImage.connect(self._nextImage)
+
         # Add this widget to the stack
         self._stack.addWidget(self._fullSizeImage)
 
@@ -278,26 +283,22 @@ class MainWindow(QMainWindow):
         pass
 
     def _ImageKeyEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Up:
-            # Reset the stack back to the scroll widget
-            self._stack.setCurrentWidget(self._scroll)
+        pass
 
-            # Disable the previous and next image actions
-            self._nextAction.setEnabled(False)
-            self._prevAction.setEnabled(False)
+    def _returnToBrowser(self) -> None:
+        # Reset the stack back to the scroll widget
+        self._stack.setCurrentWidget(self._scroll)
 
-            if self._fullSizeImage:
-                # Remove the maximised image from the stack
-                self._stack.removeWidget(self._fullSizeImage)
+        # Disable the previous and next image actions
+        self._nextAction.setEnabled(False)
+        self._prevAction.setEnabled(False)
 
-            # Indicate that the image is no longer maximised
-            self._imageMaximised = False
-        elif event.key() == Qt.Key.Key_Right:
-            # Show the next image
-            self._nextImage()
-        elif event.key() == Qt.Key.Key_Left:
-            # Show the previous image
-            self._prevImage()
+        if self._fullSizeImage:
+            # Remove the maximised image from the stack
+            self._stack.removeWidget(self._fullSizeImage)
+
+        # Indicate that the image is no longer maximised
+        self._imageMaximised = False
 
     def _nextImage(self) -> None:
         # Increment the current image index
