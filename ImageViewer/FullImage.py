@@ -30,6 +30,9 @@ class FullImage(QGraphicsView):
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
 
+        # Ensure transformations happen under the mouse position
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+
         # Add the scene to the view
         self.setScene(self._scene)
 
