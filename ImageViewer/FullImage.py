@@ -131,7 +131,7 @@ class FullImage(QGraphicsView):
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        # super().keyPressEvent(event)
+        super().keyPressEvent(event)
 
         if event.key() == Qt.Key.Key_Up:
             # Send the return to browser signal
