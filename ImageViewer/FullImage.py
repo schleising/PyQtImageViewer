@@ -45,6 +45,9 @@ class FullImage(QGraphicsView):
         # Store how much the current image is scaled
         self._currentScale: float = 1.0
 
+        # Indicate that Control is held down
+        self._ctrlHeld = False
+
     def _LoadPixmap(self) -> None:
         # Use Pillow to open the image and convert to a QPixmap
         pilImage = Image.open(self._imagePath)
@@ -93,3 +96,24 @@ class FullImage(QGraphicsView):
         elif event.key() == Qt.Key.Key_Right:
             # Send the next image signal
             self.nextImage.emit()
+        elif event.key() == Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
+            # Set control held to True
+            self._ctrlHeld = True
+
+            # Set the drag mode to no drag
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
+
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        super().keyReleaseEvent(event)
+
+        if event.key() == Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
+            # Set control held to False
+            self._ctrlHeld = False
+
+            # Set the drag mode back to scroll hand drag
+            self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        super().mouseMoveEvent(event)
+
+        # print(event.pos().x(), event.pos().y())
