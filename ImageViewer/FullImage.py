@@ -58,16 +58,14 @@ class FullImage(QGraphicsView):
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
-        # # Convert the PIL qtImage into a QPixmap
-        # self._pixmap.convertFromImage(self._qtImage)
+        # Reset the scale (as scale is cumulative)
+        self.scale(1 / self._currentScale, 1 / self._currentScale)
 
-        # # Scale the pixmap to the window size
-        # currentImage = self._pixmap.scaled(
-        #     self.size().width(),
-        #     self.size().height(),
-        #     aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
-        #     mode=Qt.TransformationMode.SmoothTransformation
-        # )
+        # Calculate the new scale
+        self._currentScale = min((self.width() - 2) / self._pixmap.width(), (self.height() - 2) / self._pixmap.height())
+
+        # Apply the new scale value
+        self.scale(self._currentScale, self._currentScale)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
