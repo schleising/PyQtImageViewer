@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         self._currentImageIndex = 0
 
         # Setup a label for the full sized image
-        self._fullSizeImage: Optional[QLabel] = None
+        self._fullSizeImage: Optional[QWidget] = None
 
         # Keep track of whether the image is maximised or not
         self._imageMaximised = False
