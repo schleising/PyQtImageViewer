@@ -8,6 +8,8 @@ from PySide6.QtWidgets import QLabel, QScrollArea
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent
 from PySide6.QtCore import Qt, QPoint
 
+from ImageViewer.Constants import ZOOM_SCALE_FACTOR
+
 class FullImage(QScrollArea):
     def __init__(self, imagePath: Path, parent=None):
         super().__init__(parent=parent)
@@ -38,6 +40,9 @@ class FullImage(QScrollArea):
         # Last mouse position, used for mouse dragging
         self._lastMousePos: Optional[QPoint] = None
 
+        # Store how much the current image is scaled
+        self._currentScale: float = 1.0
+
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
@@ -60,12 +65,29 @@ class FullImage(QScrollArea):
 
         if event.angleDelta().y() > 0:
             # If the mouse wheel scroll is positive, zoom in
-            currentImage = self._pixmap.scaled(int(self._label.pixmap().size().width() * 1.1), int(self._label.pixmap().size().height() * 1.1))
+            currentImage = self._pixmap.scaled(
+                int(self._label.pixmap().size().width() * ZOOM_SCALE_FACTOR),
+                int(self._label.pixmap().size().height() * ZOOM_SCALE_FACTOR)
+            )
+
+            # Add the new image to the label
             self._label.setPixmap(currentImage)
+
+            # Update the current scale value
+            self._currentScale *= ZOOM_SCALE_FACTOR
+
         elif event.angleDelta().y() < 0:
             # If the mouse wheel scroll is negative, zoom out
-            currentImage = self._pixmap.scaled(int(self._label.pixmap().size().width() / 1.1), int(self._label.pixmap().size().height() / 1.1))
+            currentImage = self._pixmap.scaled(
+                int(self._label.pixmap().size().width() / ZOOM_SCALE_FACTOR),
+                int(self._label.pixmap().size().height() / ZOOM_SCALE_FACTOR)
+            )
+
+            # Add the new image to the label
             self._label.setPixmap(currentImage)
+
+            # Update the current scale value
+            self._currentScale /= ZOOM_SCALE_FACTOR
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
