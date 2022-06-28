@@ -71,30 +71,12 @@ class FullImage(QGraphicsView):
         super().wheelEvent(event)
 
         if event.angleDelta().y() > 0:
-            # If the mouse wheel scroll is positive, zoom in
-            # currentImage = self._pixmap.scaled(
-            #     int(self._label.pixmap().size().width() * ZOOM_SCALE_FACTOR),
-            #     int(self._label.pixmap().size().height() * ZOOM_SCALE_FACTOR)
-            # )
-
-            # # Add the new image to the label
-            # self._label.setPixmap(currentImage)
-
-            # Update the current scale value
-            self._currentScale *= ZOOM_SCALE_FACTOR
+            # Scale the image up by the zoom factor
+            self.scale(ZOOM_SCALE_FACTOR, ZOOM_SCALE_FACTOR)
 
         elif event.angleDelta().y() < 0:
-            # If the mouse wheel scroll is negative, zoom out
-            # currentImage = self._pixmap.scaled(
-            #     int(self._label.pixmap().size().width() / ZOOM_SCALE_FACTOR),
-            #     int(self._label.pixmap().size().height() / ZOOM_SCALE_FACTOR)
-            # )
-
-            # # Add the new image to the label
-            # self._label.setPixmap(currentImage)
-
-            # Update the current scale value
-            self._currentScale /= ZOOM_SCALE_FACTOR
+            # Scale the image down by the zoom factor
+            self.scale(1 / ZOOM_SCALE_FACTOR, 1 / ZOOM_SCALE_FACTOR)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
