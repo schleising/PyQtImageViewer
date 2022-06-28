@@ -4,7 +4,7 @@ from typing import Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent
 from PySide6.QtCore import Qt, QPoint, Signal
 
@@ -40,7 +40,10 @@ class FullImage(QGraphicsView):
         self.setScene(self._scene)
 
         # Load the image, convert it to a pixmap and add it to the scene
-        self._LoadPixmap()
+        self._pixmapGraphicsItem = self._LoadPixmap()
+
+        # Indicate whether we have zoomed in at all
+        self._zoomed = False
 
         # Store how much the current image is scaled
         self._currentScale: float = 1.0
@@ -48,7 +51,7 @@ class FullImage(QGraphicsView):
         # Indicate that Control is held down
         self._ctrlHeld = False
 
-    def _LoadPixmap(self) -> None:
+    def _LoadPixmap(self) -> QGraphicsItem:
         # Use Pillow to open the image and convert to a QPixmap
         pilImage = Image.open(self._imagePath)
 
@@ -59,19 +62,14 @@ class FullImage(QGraphicsView):
         self._pixmap.convertFromImage(self._qtImage)
 
         # Add the pixmap to the scene
-        self._scene.addPixmap(self._pixmap)
+        return self._scene.addPixmap(self._pixmap)
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
-        # Reset the scale (as scale is cumulative)
-        self.scale(1 / self._currentScale, 1 / self._currentScale)
-
-        # Calculate the new scale
-        self._currentScale = min((self.width() - 2) / self._pixmap.width(), (self.height() - 2) / self._pixmap.height())
-
-        # Apply the new scale value
-        self.scale(self._currentScale, self._currentScale)
+        if not self._zoomed:
+            # Ensure the image fits into the window if itis not already zoomed
+            self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
@@ -80,9 +78,15 @@ class FullImage(QGraphicsView):
             # Scale the image up by the zoom factor
             self.scale(ZOOM_SCALE_FACTOR, ZOOM_SCALE_FACTOR)
 
+            # Show that we have zoomed
+            self._zoomed = True
+
         elif event.angleDelta().y() < 0:
             # Scale the image down by the zoom factor
             self.scale(1 / ZOOM_SCALE_FACTOR, 1 / ZOOM_SCALE_FACTOR)
+
+            # Show that we have zoomed
+            self._zoomed = True
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
