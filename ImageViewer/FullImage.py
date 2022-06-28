@@ -33,14 +33,14 @@ class FullImage(QGraphicsView):
         # Ensure transformations happen under the mouse position
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
 
+        # Use the built in drag scrolling
+        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+
         # Add the scene to the view
         self.setScene(self._scene)
 
         # Load the image, convert it to a pixmap and add it to the scene
         self._LoadPixmap()
-
-        # Last mouse position, used for mouse dragging
-        self._lastMousePos: Optional[QPoint] = None
 
         # Store how much the current image is scaled
         self._currentScale: float = 1.0
@@ -80,38 +80,6 @@ class FullImage(QGraphicsView):
         elif event.angleDelta().y() < 0:
             # Scale the image down by the zoom factor
             self.scale(1 / ZOOM_SCALE_FACTOR, 1 / ZOOM_SCALE_FACTOR)
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        super().mousePressEvent(event)
-
-        # Check it is the left button which has been clicked
-        if event.button() == Qt.MouseButton.LeftButton:
-            # Store the click position
-            self._lastMousePos = event.pos()
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        super().mouseReleaseEvent(event)
-
-        # Check it is the left mouse button which has been released
-        if event.button() == Qt.MouseButton.LeftButton:
-            # Clear the last mouse position
-            self._lastMousePos = None
-
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        super().mouseMoveEvent(event)
-
-        # Check we have a last mouse position and the left button is held
-        if self._lastMousePos is not None and event.buttons() & Qt.MouseButton.LeftButton:
-            # Work out how far we've moved in x and y
-            dx = event.pos().x() - self._lastMousePos.x()
-            dy = event.pos().y() - self._lastMousePos.y()
-
-            # Store the current mouse position
-            self._lastMousePos = event.pos()
-
-            # Adjust the scroll bars by the dx and dy values
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - dx)
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - dy)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
