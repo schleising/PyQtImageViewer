@@ -265,14 +265,17 @@ class MainWindow(QMainWindow):
         # Get the widget is actually a thumbnail
         if isinstance(thumbnail, Thumbnail):
             # if this widget represents a folder, update the path and load the new set of thumbnails
-            if thumbnail._imagePath.is_dir():
-                # Update the path
-                self._currentPath = thumbnail._imagePath
+            self.OpenItem(thumbnail.ImagePath)
 
-                # Clear and recreate the grid for this folder
-                self.SetLabels()
-            else:
-                self.ShowImage(thumbnail._imagePath)
+    def OpenItem(self, path: Path) -> None:
+        if path.is_dir():
+            # Update the path
+            self._currentPath = path
+
+            # Clear and recreate the grid for this folder
+            self.SetLabels()
+        else:
+            self.ShowImage(path)
 
     def FileOpened(self, imagePath: Path) -> None:
         # Show that ab file has been opened
@@ -418,6 +421,10 @@ class MainWindow(QMainWindow):
 
                 # Highlight the new thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
+            case Qt.Key.Key_Return:
+                # Show the highlighted image (or open the folder)
+                self.OpenItem(self._thumbnailList[self._currentHighlightedThumbnail].ImagePath)
 
     def _ImageKeyEvent(self, event: QKeyEvent) -> None:
         pass

@@ -93,7 +93,7 @@ class Thumbnail(QWidget):
         self.setLayout(self._layout)
 
         # Set the path of this image or folder
-        self._imagePath = imagePath
+        self.ImagePath = imagePath
 
         # Set the current image to None
         self._currentImage: Optional[QPixmap] = None
@@ -156,7 +156,7 @@ class Thumbnail(QWidget):
         return text if len(text) <= 15 else f'{text[:6]}...{text[-6:]}'
 
     def SetDefaultImage(self) -> None:
-        if self._imagePath.is_file():
+        if self.ImagePath.is_file():
             if self._defaultImage:
                 # if this is a file, set the default loading image for now
                 self._thumbnailImage.setPixmap(self._defaultImage)
@@ -187,7 +187,7 @@ class Thumbnail(QWidget):
                 self._currentImage = currentFolderImage
 
         # Set the filename text
-        self._thumbnailText.setText(self._ShortenLabelText(self._imagePath.stem))
+        self._thumbnailText.setText(self._ShortenLabelText(self.ImagePath.stem))
 
     def _LoadImage(self):
         # Load the image in a new thread
@@ -195,19 +195,19 @@ class Thumbnail(QWidget):
 
     def _LoadImageInThread(self) -> None:
         # Log that the image load has started
-        logging.log(logging.DEBUG, f'Loading Image {self._imagePath}')
+        logging.log(logging.DEBUG, f'Loading Image {self.ImagePath}')
 
         # Use Pillow to open the image and convert to a QPixmap
-        pilImage = Image.open(self._imagePath)
+        pilImage = Image.open(self.ImagePath)
 
         # Log that PIL the image load has completed
-        logging.log(logging.DEBUG, f'PIL Loaded {self._imagePath}')
+        logging.log(logging.DEBUG, f'PIL Loaded {self.ImagePath}')
 
         # Convert the PIL image to a QImage
         self._qtImage = ImageQt(pilImage)
 
         # Log that the QImage conversion has completed
-        logging.log(logging.DEBUG, f'Qt Converted {self._imagePath}')
+        logging.log(logging.DEBUG, f'Qt Converted {self.ImagePath}')
 
         # Resize the image
         self.ResizeImage()
@@ -216,7 +216,7 @@ class Thumbnail(QWidget):
         pixmap = QPixmap()
 
         # Log that the image has been loaded and we are ready to resize it to fit the label
-        logging.log(logging.DEBUG, f'Resizing Image {self._imagePath}')
+        logging.log(logging.DEBUG, f'Resizing Image {self.ImagePath}')
 
         # Check the Qt Image has been set
         if self._qtImage:
@@ -237,7 +237,7 @@ class Thumbnail(QWidget):
             self.loaded.emit()
 
             # Log that the load is complete
-            logging.log(logging.DEBUG, f'Loaded Image {self._imagePath}')
+            logging.log(logging.DEBUG, f'Loaded Image {self.ImagePath}')
 
     def ImageLoaded(self) -> None:
         # The image has been loaded so we can now reset the opacity to 100%
