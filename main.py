@@ -26,7 +26,7 @@ class PyQtImageViewer(QApplication):
             logging.log(logging.DEBUG, f'**** Application Received QFileOpenEvent: {event.file()}')
 
             # Ensure the signal exists
-            if self.fileOpenedSignal is not None:
+            if self.fileOpenedSignal is not None and '.vscode' not in event.file():
                 # Log that we are emitting the signal (this will fail if the data type isn't set properly on the signal)
                 logging.log(logging.DEBUG, 'App: Signal Emitting')
 
@@ -78,3 +78,5 @@ if __name__ == '__main__':
 #TODO: Implement help
 #TODO: More text as thumbnails get bigger
 #TODO: Set minimum window size
+#TODO: Keep centre of image centered during resize
+#TODO: Double click to maximise / minimise

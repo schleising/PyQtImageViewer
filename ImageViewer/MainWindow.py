@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Optional
 import logging
 
-from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget, QMenu
-from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent
+from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QStackedWidget
+from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence
 from PySide6.QtCore import Qt, Signal, QTimer
 
 from ImageViewer.Thumbnail import Thumbnail
@@ -84,44 +84,93 @@ class MainWindow(QMainWindow):
         # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
-        # Get the menubar
-        self._menuBar = self.menuBar()
-
-        # The image menu
-        self._imageMenu: Optional[QMenu] = None
-
-        # Create a Next acion to call _nextImage
-        self._nextAction = QAction('Next', self)
-
-        # Create a Previous acion to call _prevImage
-        self._prevAction = QAction('Previous', self)
-
         # Add a menu for previous and next images, disabled to start with
         self._addImageMenu()
 
         # Show the window
         self.show()
 
-    def _menuTest(self) -> None:
-        print('Test')
-
     def _addImageMenu(self):
-        # Create the Image menu
-        self._imageMenu = self._menuBar.addMenu('Image')
+        # Get the menubar
+        self._menuBar = self.menuBar()
+
+        # Create a Next acion to call _nextImage
+        self._nextAction = QAction('Next', self)
+        self._nextAction.setShortcut(Qt.Key.Key_Right)
 
         # Create a Next acion to call _nextImage
         self._nextAction.triggered.connect(self._nextImage) # type: ignore
 
         # Create a Previous acion to call _prevImage
+        self._prevAction = QAction('Previous', self)
+        self._prevAction.setShortcut(Qt.Key.Key_Left)
+
+        # Create a Previous acion to call _prevImage
         self._prevAction.triggered.connect(self._prevImage) # type: ignore
 
-        # Add the actions to the Image Menu
-        self._imageMenu.addAction(self._nextAction)
-        self._imageMenu.addAction(self._prevAction)
+        # Create the Image menu
+        self._imageMenu = self._menuBar.addMenu('Image')
+
+        # Add a zoom to rect action
+        self._zoomAction = QAction('Zoom to Rect', self)
+        self._zoomAction.setShortcut(Qt.Key.Key_Z)
+
+        # Add a zoom to rect action
+        self._resetZoomAction = QAction('Reset Zoom', self)
+        self._resetZoomAction.setShortcut(Qt.Key.Key_R)
+
+        # Add a crop to rect action
+        self._cropAction = QAction('Crop to Rect', self)
+        self._cropAction.setShortcut(Qt.Key.Key_C)
+
+        # Add an Undo action
+        self._undoAction = QAction('Undo', self)
+        self._undoAction.setShortcut(QKeySequence.Undo)
+
+        # Add a Save action
+        self._saveAction = QAction('Save', self)
+        self._saveAction.setShortcut(QKeySequence.Save)
 
         # Disable the actions for now
-        self._nextAction.setEnabled(False)
-        self._prevAction.setEnabled(False)
+        self._updateMenu()
+
+    def _updateMenu(self) -> None:
+        if self._imageMaximised and self._fullSizeImage is not None:
+            # Connect to the zoom function of the full sized image
+            self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
+
+            # Connect to the reset zoom function of the full sized image
+            self._resetZoomAction.triggered.connect(self._fullSizeImage.ResetZoom) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
+
+            # Connect to the undo function of the full sized image
+            self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
+
+            # Connect to the save function of the full sized image
+            self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
+
+            # Add the actions to the Image Menu
+            self._imageMenu.addAction(self._nextAction)
+            self._imageMenu.addAction(self._prevAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._zoomAction)
+            self._imageMenu.addAction(self._resetZoomAction)
+            self._imageMenu.addAction(self._cropAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._undoAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._saveAction)
+        else:
+            # Remove the actions from the image menu
+            self._imageMenu.removeAction(self._prevAction)
+            self._imageMenu.removeAction(self._nextAction)
+            self._imageMenu.removeAction(self._zoomAction)
+            self._imageMenu.removeAction(self._resetZoomAction)
+            self._imageMenu.removeAction(self._cropAction)
+            self._imageMenu.removeAction(self._undoAction)
+            self._imageMenu.removeAction(self._saveAction)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
@@ -192,6 +241,9 @@ class MainWindow(QMainWindow):
             # Otherwise align just to the top
             self._grid.setAlignment(Qt.AlignTop)
 
+        # Scroll the view back to the top
+        self._scroll.verticalScrollBar().setValue(0)
+
     def thumbnailClicked(self) -> None:
         # Get the widget that was clicked
         thumbnail = self.sender()
@@ -259,20 +311,21 @@ class MainWindow(QMainWindow):
         # Swap the stack to this widget
         self._stack.setCurrentWidget(self._fullSizeImage)
 
-        # Enable the previous and next image actions
-        self._nextAction.setEnabled(True)
-        self._prevAction.setEnabled(True)
-
         # Log that we are in maximaised image mode
         self._imageMaximised = True
+
+        # Enable the previous and next image actions
+        self._updateMenu()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
-        if event.key() == Qt.Key.Key_Escape:
-            # Close application on Escape
-            self.close()
-        elif self._imageMaximised:
+        match event.key():
+            case Qt.Key.Key_Escape:
+                # Close application on Escape
+                self.close()
+
+        if self._imageMaximised:
             # If the image is maximised use the image key press handler
             self._ImageKeyEvent(event)
         else:
@@ -289,16 +342,15 @@ class MainWindow(QMainWindow):
         # Reset the stack back to the scroll widget
         self._stack.setCurrentWidget(self._scroll)
 
-        # Disable the previous and next image actions
-        self._nextAction.setEnabled(False)
-        self._prevAction.setEnabled(False)
-
         if self._fullSizeImage:
             # Remove the maximised image from the stack
             self._stack.removeWidget(self._fullSizeImage)
 
         # Indicate that the image is no longer maximised
         self._imageMaximised = False
+
+        # Disable the previous and next image actions
+        self._updateMenu()
 
     def _nextImage(self) -> None:
         # Increment the current image index
@@ -334,3 +386,13 @@ class MainWindow(QMainWindow):
         for thumbnail in self._thumbnailList:
             # Resize each of the thumbnails
             thumbnail.ResizeImage()
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        super().mouseDoubleClickEvent(event)
+
+        if self._imageMaximised:
+            # If we are showing a full image, allow double click to toggle full screen or normal
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
