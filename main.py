@@ -71,7 +71,6 @@ if __name__ == '__main__':
     sys.exit(exitCode)
 
 #TODO: Better image transitions
-#TODO: Crop images
 #TODO: Implement filters
 #TODO: Keyboard filebrowser navigation
 #TODO: Implement menu
