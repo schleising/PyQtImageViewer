@@ -272,10 +272,12 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
-        if event.key() == Qt.Key.Key_Escape:
-            # Close application on Escape
-            self.close()
-        elif self._imageMaximised:
+        match event.key():
+            case Qt.Key.Key_Escape:
+                # Close application on Escape
+                self.close()
+
+        if self._imageMaximised:
             # If the image is maximised use the image key press handler
             self._ImageKeyEvent(event)
         else:

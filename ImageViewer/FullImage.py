@@ -83,52 +83,54 @@ class FullImage(QGraphicsView):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
-        if event.key() == Qt.Key.Key_Up:
-            # Send the return to browser signal
-            self.returnToBrowser.emit()
+        match event.key():
+            case Qt.Key.Key_Up:
+                # Send the return to browser signal
+                self.returnToBrowser.emit()
 
-        elif event.key() == Qt.Key.Key_Left:
-            # Send the previous image signal
-            self.previousImage.emit()
+            case Qt.Key.Key_Left:
+                # Send the previous image signal
+                self.previousImage.emit()
 
-        elif event.key() == Qt.Key.Key_Right:
-            # Send the next image signal
-            self.nextImage.emit()
+            case Qt.Key.Key_Right:
+                # Send the next image signal
+                self.nextImage.emit()
 
-        elif event.key() == Qt.Key.Key_Z:
-            #  Check there is a rectangle on the screen
-            if self._graphicsRectItem:
-                # Zoom to this rectangle, maintaining aspect ratio
-                self.fitInView(self._graphicsRectItem, Qt.AspectRatioMode.KeepAspectRatio)
+            case Qt.Key.Key_Z:
+                #  Check there is a rectangle on the screen
+                if self._graphicsRectItem:
+                    # Zoom to this rectangle, maintaining aspect ratio
+                    self.fitInView(self._graphicsRectItem, Qt.AspectRatioMode.KeepAspectRatio)
 
-                # Remove the rectangle
-                self._scene.removeItem(self._graphicsRectItem)
+                    # Remove the rectangle
+                    self._scene.removeItem(self._graphicsRectItem)
 
-                # Set the rectangle to None
-                self._graphicsRectItem = None
+                    # Set the rectangle to None
+                    self._graphicsRectItem = None
 
-                # Indicate that we are zoomed
-                self._zoomed = True
+                    # Indicate that we are zoomed
+                    self._zoomed = True
 
-        elif event.key() == Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
-            # Set control held to True
-            self._ctrlHeld = True
+            case Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
+                # Set control held to True
+                self._ctrlHeld = True
 
-            # Store the point of the start of the drag
-            self._startDragPoint = self.mapFromGlobal(QCursor().pos())
+                # Store the point of the start of the drag
+                self._startDragPoint = self.mapFromGlobal(QCursor().pos())
 
-            # Set the drag mode to no drag
-            self.setDragMode(QGraphicsView.DragMode.NoDrag)
+                # Set the drag mode to no drag
+                self.setDragMode(QGraphicsView.DragMode.NoDrag)
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         super().keyReleaseEvent(event)
 
-        if event.key() == Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
-            # Set control held to False
-            self._ctrlHeld = False
+        match event.key():
+            case  Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
+                # Set control held to False
+                self._ctrlHeld = False
 
-            # Set the drag mode back to scroll hand drag
-            self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+                # Set the drag mode back to scroll hand drag
+                self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
