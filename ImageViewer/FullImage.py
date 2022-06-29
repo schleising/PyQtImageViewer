@@ -103,12 +103,27 @@ class FullImage(QGraphicsView):
         if event.key() == Qt.Key.Key_Up:
             # Send the return to browser signal
             self.returnToBrowser.emit()
+
         elif event.key() == Qt.Key.Key_Left:
             # Send the previous image signal
             self.previousImage.emit()
+
         elif event.key() == Qt.Key.Key_Right:
             # Send the next image signal
             self.nextImage.emit()
+
+        elif event.key() == Qt.Key.Key_Z:
+            #  Check there is a rectangle on the screen
+            if self._graphicsRectItem:
+                # Zoom to this rectangle, maintaining aspect ratio
+                self.fitInView(self._graphicsRectItem, Qt.AspectRatioMode.KeepAspectRatio)
+
+                # Remove the rectangle
+                self._scene.removeItem(self._graphicsRectItem)
+
+                # Set the rectangle to None
+                self._graphicsRectItem = None
+
         elif event.key() == Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
             # Set control held to True
             self._ctrlHeld = True
