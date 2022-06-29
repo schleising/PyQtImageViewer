@@ -73,9 +73,7 @@ if __name__ == '__main__':
 #TODO: Better image transitions
 #TODO: Implement filters
 #TODO: Keyboard filebrowser navigation
-#TODO: Implement menu
 #TODO: Implement help
 #TODO: More text as thumbnails get bigger
 #TODO: Set minimum window size
 #TODO: Keep centre of image centered during resize
-#TODO: Double click to maximise / minimise
