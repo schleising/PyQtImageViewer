@@ -90,9 +90,6 @@ class MainWindow(QMainWindow):
         # Show the window
         self.show()
 
-    def _menuTest(self) -> None:
-        print('Test')
-
     def _addImageMenu(self):
         # Get the menubar
         self._menuBar = self.menuBar()
@@ -112,16 +109,34 @@ class MainWindow(QMainWindow):
         # Create the Image menu
         self._imageMenu = self._menuBar.addMenu('Image')
 
-        # Add the actions to the Image Menu
-        self._imageMenu.addAction(self._nextAction)
-        self._imageMenu.addAction(self._prevAction)
+        # Add a zoom to rect action
+        self._zoomAction = QAction('Zoom to Rect', self)
+
+        # Add a crop to rect action
+        self._cropAction = QAction('Crop to Rect', self)
 
         # Disable the actions for now
         self._updateMenu()
 
     def _updateMenu(self) -> None:
-        self._nextAction.setEnabled(self._imageMaximised)
-        self._prevAction.setEnabled(self._imageMaximised)
+        if self._imageMaximised and self._fullSizeImage is not None:
+            # Connect to the zoom function of the full sized image
+            self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
+
+            # Add the actions to the Image Menu
+            self._imageMenu.addAction(self._nextAction)
+            self._imageMenu.addAction(self._prevAction)
+            self._imageMenu.addAction(self._zoomAction)
+            self._imageMenu.addAction(self._cropAction)
+        else:
+            # Remove the actions from the image menu
+            self._imageMenu.removeAction(self._prevAction)
+            self._imageMenu.removeAction(self._nextAction)
+            self._imageMenu.removeAction(self._zoomAction)
+            self._imageMenu.removeAction(self._cropAction)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)

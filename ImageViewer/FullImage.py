@@ -76,7 +76,7 @@ class FullImage(QGraphicsView):
         # Add the pixmap to the scene and return the QGraphicsPixmapItem
         return self._scene.addPixmap(self._pixmap)
 
-    def _zoomImage(self) -> None:
+    def ZoomImage(self) -> None:
         #  Check there is a rectangle on the screen
         if self._graphicsRectItem:
             # Zoom to this rectangle, maintaining aspect ratio
@@ -91,7 +91,7 @@ class FullImage(QGraphicsView):
             # Indicate that we are zoomed
             self._zoomed = True
 
-    def _cropImage(self) -> None:
+    def CropImage(self) -> None:
         if self._graphicsRectItem is not None and self._qtImage is not None:
             # Copy the cropped area out of the QImage
             self._qtImage = self._qtImage.copy(self._graphicsRectItem.rect().toRect())
@@ -145,11 +145,11 @@ class FullImage(QGraphicsView):
 
             case Qt.Key.Key_Z:
                 # Zoom the image to the rect
-                self._zoomImage()
+                self.ZoomImage()
 
             case Qt.Key.Key_C:
                 # Crop the image
-                self._cropImage()
+                self.CropImage()
 
             case Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
                 # Set control held to True
