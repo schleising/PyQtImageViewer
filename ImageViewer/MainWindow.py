@@ -380,6 +380,9 @@ class MainWindow(QMainWindow):
                 # Highlight the new thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
 
+                # Ensure the thumbnail is in view
+                self._scroll.ensureWidgetVisible(self._thumbnailList[self._currentHighlightedThumbnail])
+
             case Qt.Key.Key_Right:
                 # Remove the highlight from the current thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
@@ -393,6 +396,9 @@ class MainWindow(QMainWindow):
 
                 # Highlight the new thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
+                # Ensure the thumbnail is in view
+                self._scroll.ensureWidgetVisible(self._thumbnailList[self._currentHighlightedThumbnail])
 
             case Qt.Key.Key_Up:
                 # Remove the highlight from the current thumbnail
@@ -408,6 +414,9 @@ class MainWindow(QMainWindow):
                 # Highlight the new thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
 
+                # Ensure the thumbnail is in view
+                self._scroll.ensureWidgetVisible(self._thumbnailList[self._currentHighlightedThumbnail])
+
             case Qt.Key.Key_Down:
                 # Remove the highlight from the current thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
@@ -421,6 +430,9 @@ class MainWindow(QMainWindow):
 
                 # Highlight the new thumbnail
                 self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
+                # Ensure the thumbnail is in view
+                self._scroll.ensureWidgetVisible(self._thumbnailList[self._currentHighlightedThumbnail])
 
             case Qt.Key.Key_Return:
                 # Show the highlighted image (or open the folder)
