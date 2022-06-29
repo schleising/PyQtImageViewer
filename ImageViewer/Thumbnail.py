@@ -4,7 +4,7 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
-from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter, QFontMetrics
+from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter, QFontMetrics, QPalette
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
@@ -37,6 +37,9 @@ class PixmapLabel(QLabel):
 
             # Set the fill to Dodger Blue 50% opaque
             painter.setBrush(DODGER_BLUE)
+
+            # Set the pen to Dodger Blue too
+            painter.setPen(DODGER_BLUE)
 
             # Draw this colour over the whole pixmap rect
             painter.drawRect(rect)
@@ -148,12 +151,31 @@ class Thumbnail(QWidget):
         # Ensure that the image knows it is to be highlighted (or not)
         self._thumbnailImage.highlighted = self._highlighted
 
+        if self._highlighted:
+            # Get the palette
+            palette = self._thumbnailText.palette()
+
+            # Set the colour of the palette
+            palette.setColor(QPalette.WindowText, '#1E90FF')
+
+            # Apply the palette to the label
+            self._thumbnailText.setPalette(palette)
+        else:
+            # Get the palette
+            palette = self._thumbnailText.palette()
+
+            # Set the colour of the palette
+            palette.setColor(QPalette.WindowText, Qt.white)
+
+            # Apply the palette to the label
+            self._thumbnailText.setPalette(palette)
+
         # Force a repaint of this widget
         self.repaint()
 
     def _ShortenLabelText(self, text: str) -> str:
         # Return elided text version of the filename (stem only) that fits in the thumbnail width
-        fontMetrics = QFontMetrics(text)
+        fontMetrics = QFontMetrics(self._thumbnailText.font())
         return fontMetrics.elidedText(text, Qt.TextElideMode.ElideMiddle, self._thumbnailSize)
 
     def SetDefaultImage(self) -> None:
