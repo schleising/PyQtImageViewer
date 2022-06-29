@@ -167,6 +167,9 @@ class FullImage(QGraphicsView):
             # Create a rect from these two points
             rect = QRectF(topLeft, bottomRight)
 
+            # Constrain the rect to the pixmap
+            rect = rect.intersected(self._pixmapGraphicsItem.boundingRect())
+
             # Add the rect to the scene
             self._graphicsRectItem = self._scene.addRect(rect)
 
