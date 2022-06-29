@@ -26,7 +26,7 @@ class PyQtImageViewer(QApplication):
             logging.log(logging.DEBUG, f'**** Application Received QFileOpenEvent: {event.file()}')
 
             # Ensure the signal exists
-            if self.fileOpenedSignal is not None:
+            if self.fileOpenedSignal is not None and '.vscode' not in event.file():
                 # Log that we are emitting the signal (this will fail if the data type isn't set properly on the signal)
                 logging.log(logging.DEBUG, 'App: Signal Emitting')
 
