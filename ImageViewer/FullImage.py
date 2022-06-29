@@ -124,6 +124,9 @@ class FullImage(QGraphicsView):
                 # Set the rectangle to None
                 self._graphicsRectItem = None
 
+                # Indicate that we are zoomed
+                self._zoomed = True
+
         elif event.key() == Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
             # Set control held to True
             self._ctrlHeld = True
