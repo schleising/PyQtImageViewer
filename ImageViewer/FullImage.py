@@ -63,6 +63,9 @@ class FullImage(QGraphicsView):
         # A graphics rect item for the selection rectangle
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
+        # A list containing the last n versions of this image
+        self._undoBuffer: list[QImage] = []
+
     def _LoadPixmap(self) -> QGraphicsPixmapItem:
         # Use Pillow to open the image and convert to a QPixmap
         pilImage = Image.open(self._imagePath)
@@ -99,10 +102,14 @@ class FullImage(QGraphicsView):
             # We are no longer zoomed
             self._zoomed = False
 
-    def CropImage(self) -> None:
-        if self._graphicsRectItem is not None and self._qtImage is not None:
-            # Copy the cropped area out of the QImage
-            self._qtImage = self._qtImage.copy(self._graphicsRectItem.rect().toRect())
+    def _updatePixmap(self) -> None:
+        if self._qtImage is not None:
+            if self._graphicsRectItem is not None:
+                # Remove the rect if it exists
+                self._scene.removeItem(self._graphicsRectItem)
+
+                # Set the rect to None
+                self._graphicsRectItem = None
 
             # Set the pixmap to this new image
             self._pixmap.convertFromImage(self._qtImage)
@@ -113,12 +120,6 @@ class FullImage(QGraphicsView):
             # Add the new pixmap to the scene
             self._pixmapGraphicsItem = self._scene.addPixmap(self._pixmap)
 
-            # Remove the rect
-            self._scene.removeItem(self._graphicsRectItem)
-
-            # Set the rect to None
-            self._graphicsRectItem = None
-
             # Fit the new pixmap in the view
             self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
 
@@ -127,6 +128,26 @@ class FullImage(QGraphicsView):
 
             # Indicate that we are not zoomed
             self._zoomed = False
+
+    def CropImage(self) -> None:
+        if self._graphicsRectItem is not None and self._qtImage is not None:
+            # Add the current QImage to the undo buffer
+            self._undoBuffer.append(self._qtImage.copy())
+
+            # Copy the cropped area out of the QImage
+            self._qtImage = self._qtImage.copy(self._graphicsRectItem.rect().toRect())
+
+            # Update the pixmap
+            self._updatePixmap()
+
+    def UndoLastChange(self) -> None:
+        # If there are items in the buffer
+        if self._undoBuffer:
+            # Pop the latest image off the buffer
+            self._qtImage = self._undoBuffer.pop()
+
+            # Update the pixmap to this older image
+            self._updatePixmap()
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)

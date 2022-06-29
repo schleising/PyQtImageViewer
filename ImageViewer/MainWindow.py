@@ -4,7 +4,7 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QStackedWidget
-from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent, QMouseEvent
+from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence
 from PySide6.QtCore import Qt, Signal, QTimer
 
 from ImageViewer.Thumbnail import Thumbnail
@@ -123,6 +123,10 @@ class MainWindow(QMainWindow):
         self._cropAction = QAction('Crop to Rect', self)
         self._cropAction.setShortcut(Qt.Key.Key_C)
 
+        # Add an Undo action
+        self._undoAction = QAction('Undo', self)
+        self._undoAction.setShortcut(QKeySequence.Undo)
+
         # Disable the actions for now
         self._updateMenu()
 
@@ -137,6 +141,9 @@ class MainWindow(QMainWindow):
             # Connect to the crop function of the full sized image
             self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
+            # Connect to the undo function of the full sized image
+            self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
+
             # Add the actions to the Image Menu
             self._imageMenu.addAction(self._nextAction)
             self._imageMenu.addAction(self._prevAction)
@@ -144,6 +151,8 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._zoomAction)
             self._imageMenu.addAction(self._resetZoomAction)
             self._imageMenu.addAction(self._cropAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._undoAction)
         else:
             # Remove the actions from the image menu
             self._imageMenu.removeAction(self._prevAction)
@@ -151,6 +160,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.removeAction(self._zoomAction)
             self._imageMenu.removeAction(self._resetZoomAction)
             self._imageMenu.removeAction(self._cropAction)
+            self._imageMenu.removeAction(self._undoAction)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
