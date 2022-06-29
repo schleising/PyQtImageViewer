@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Optional
 import logging
 
-from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QLabel, QStackedWidget, QMenu
-from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent
+from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QStackedWidget
+from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent, QMouseEvent
 from PySide6.QtCore import Qt, Signal, QTimer
 
 from ImageViewer.Thumbnail import Thumbnail
@@ -366,3 +366,13 @@ class MainWindow(QMainWindow):
         for thumbnail in self._thumbnailList:
             # Resize each of the thumbnails
             thumbnail.ResizeImage()
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        super().mouseDoubleClickEvent(event)
+
+        if self._imageMaximised:
+            # If we are showing a full image, allow double click to toggle full screen or normal
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
