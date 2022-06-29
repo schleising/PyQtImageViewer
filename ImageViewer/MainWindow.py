@@ -96,12 +96,14 @@ class MainWindow(QMainWindow):
 
         # Create a Next acion to call _nextImage
         self._nextAction = QAction('Next', self)
+        self._nextAction.setShortcut(Qt.Key.Key_Right)
 
         # Create a Next acion to call _nextImage
         self._nextAction.triggered.connect(self._nextImage) # type: ignore
 
         # Create a Previous acion to call _prevImage
         self._prevAction = QAction('Previous', self)
+        self._prevAction.setShortcut(Qt.Key.Key_Left)
 
         # Create a Previous acion to call _prevImage
         self._prevAction.triggered.connect(self._prevImage) # type: ignore
@@ -111,9 +113,11 @@ class MainWindow(QMainWindow):
 
         # Add a zoom to rect action
         self._zoomAction = QAction('Zoom to Rect', self)
+        self._zoomAction.setShortcut(Qt.Key.Key_Z)
 
         # Add a crop to rect action
         self._cropAction = QAction('Crop to Rect', self)
+        self._cropAction.setShortcut(Qt.Key.Key_C)
 
         # Disable the actions for now
         self._updateMenu()
@@ -129,6 +133,7 @@ class MainWindow(QMainWindow):
             # Add the actions to the Image Menu
             self._imageMenu.addAction(self._nextAction)
             self._imageMenu.addAction(self._prevAction)
+            self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._zoomAction)
             self._imageMenu.addAction(self._cropAction)
         else:
