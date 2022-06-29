@@ -84,18 +84,6 @@ class MainWindow(QMainWindow):
         # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
-        # Get the menubar
-        self._menuBar = self.menuBar()
-
-        # The image menu
-        self._imageMenu: Optional[QMenu] = None
-
-        # Create a Next acion to call _nextImage
-        self._nextAction = QAction('Next', self)
-
-        # Create a Previous acion to call _prevImage
-        self._prevAction = QAction('Previous', self)
-
         # Add a menu for previous and next images, disabled to start with
         self._addImageMenu()
 
@@ -106,14 +94,23 @@ class MainWindow(QMainWindow):
         print('Test')
 
     def _addImageMenu(self):
-        # Create the Image menu
-        self._imageMenu = self._menuBar.addMenu('Image')
+        # Get the menubar
+        self._menuBar = self.menuBar()
+
+        # Create a Next acion to call _nextImage
+        self._nextAction = QAction('Next', self)
 
         # Create a Next acion to call _nextImage
         self._nextAction.triggered.connect(self._nextImage) # type: ignore
 
         # Create a Previous acion to call _prevImage
+        self._prevAction = QAction('Previous', self)
+
+        # Create a Previous acion to call _prevImage
         self._prevAction.triggered.connect(self._prevImage) # type: ignore
+
+        # Create the Image menu
+        self._imageMenu = self._menuBar.addMenu('Image')
 
         # Add the actions to the Image Menu
         self._imageMenu.addAction(self._nextAction)
@@ -122,6 +119,10 @@ class MainWindow(QMainWindow):
         # Disable the actions for now
         self._nextAction.setEnabled(False)
         self._prevAction.setEnabled(False)
+
+    def _updateMenu(self) -> None:
+        self._nextAction.setEnabled(self._imageMaximised)
+        self._prevAction.setEnabled(self._imageMaximised)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
@@ -262,12 +263,11 @@ class MainWindow(QMainWindow):
         # Swap the stack to this widget
         self._stack.setCurrentWidget(self._fullSizeImage)
 
-        # Enable the previous and next image actions
-        self._nextAction.setEnabled(True)
-        self._prevAction.setEnabled(True)
-
         # Log that we are in maximaised image mode
         self._imageMaximised = True
+
+        # Enable the previous and next image actions
+        self._updateMenu()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
@@ -294,16 +294,15 @@ class MainWindow(QMainWindow):
         # Reset the stack back to the scroll widget
         self._stack.setCurrentWidget(self._scroll)
 
-        # Disable the previous and next image actions
-        self._nextAction.setEnabled(False)
-        self._prevAction.setEnabled(False)
-
         if self._fullSizeImage:
             # Remove the maximised image from the stack
             self._stack.removeWidget(self._fullSizeImage)
 
         # Indicate that the image is no longer maximised
         self._imageMaximised = False
+
+        # Disable the previous and next image actions
+        self._updateMenu()
 
     def _nextImage(self) -> None:
         # Increment the current image index
