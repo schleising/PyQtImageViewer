@@ -91,6 +91,14 @@ class FullImage(QGraphicsView):
             # Indicate that we are zoomed
             self._zoomed = True
 
+    def ResetZoom(self) -> None:
+        if self._zoomed and self._pixmapGraphicsItem:
+            # Reset the zoom so the whol imaage is visible in the window
+            self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
+
+            # We are no longer zoomed
+            self._zoomed = False
+
     def CropImage(self) -> None:
         if self._graphicsRectItem is not None and self._qtImage is not None:
             # Copy the cropped area out of the QImage
@@ -134,22 +142,6 @@ class FullImage(QGraphicsView):
             case Qt.Key.Key_Up:
                 # Send the return to browser signal
                 self.returnToBrowser.emit()
-
-            case Qt.Key.Key_Left:
-                # Send the previous image signal
-                self.previousImage.emit()
-
-            case Qt.Key.Key_Right:
-                # Send the next image signal
-                self.nextImage.emit()
-
-            case Qt.Key.Key_Z:
-                # Zoom the image to the rect
-                self.ZoomImage()
-
-            case Qt.Key.Key_C:
-                # Crop the image
-                self.CropImage()
 
             case Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
                 # Set control held to True

@@ -115,6 +115,10 @@ class MainWindow(QMainWindow):
         self._zoomAction = QAction('Zoom to Rect', self)
         self._zoomAction.setShortcut(Qt.Key.Key_Z)
 
+        # Add a zoom to rect action
+        self._resetZoomAction = QAction('Reset Zoom', self)
+        self._resetZoomAction.setShortcut(Qt.Key.Key_R)
+
         # Add a crop to rect action
         self._cropAction = QAction('Crop to Rect', self)
         self._cropAction.setShortcut(Qt.Key.Key_C)
@@ -127,6 +131,9 @@ class MainWindow(QMainWindow):
             # Connect to the zoom function of the full sized image
             self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
 
+            # Connect to the reset zoom function of the full sized image
+            self._resetZoomAction.triggered.connect(self._fullSizeImage.ResetZoom) # type: ignore
+
             # Connect to the crop function of the full sized image
             self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
@@ -135,6 +142,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._prevAction)
             self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._zoomAction)
+            self._imageMenu.addAction(self._resetZoomAction)
             self._imageMenu.addAction(self._cropAction)
         else:
             # Remove the actions from the image menu
