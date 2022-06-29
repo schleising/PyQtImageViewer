@@ -149,6 +149,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.removeAction(self._prevAction)
             self._imageMenu.removeAction(self._nextAction)
             self._imageMenu.removeAction(self._zoomAction)
+            self._imageMenu.removeAction(self._resetZoomAction)
             self._imageMenu.removeAction(self._cropAction)
 
     def _GetImagePathList(self) -> list[Path]:
