@@ -75,5 +75,4 @@ if __name__ == '__main__':
 #TODO: Keyboard filebrowser navigation
 #TODO: Implement help
 #TODO: More text as thumbnails get bigger
-#TODO: Set minimum window size
 #TODO: Keep centre of image centered during resize

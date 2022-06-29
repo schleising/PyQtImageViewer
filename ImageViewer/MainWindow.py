@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal, QTimer
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
 from ImageViewer.FileTypes import supportedExtensions
+from ImageViewer.Constants import START_X, START_Y, START_WIDTH, START_HEIGHT, MIN_WIDTH
 
 class MainWindow(QMainWindow):
     # Create a signal for the file open event 
@@ -76,7 +77,10 @@ class MainWindow(QMainWindow):
         self._imageMaximised = False
 
         # Set the window position and size
-        self.setGeometry(300, 100, 1024, 768)
+        self.setGeometry(START_X, START_Y, START_WIDTH, START_HEIGHT)
+
+        # Set the minimum width
+        self.setMinimumWidth(MIN_WIDTH)
 
         # Set the default path
         self._currentPath = Path.home() / 'Pictures'
