@@ -80,23 +80,6 @@ class FullImage(QGraphicsView):
             # Ensure the image fits into the window if itis not already zoomed
             self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
 
-    def wheelEvent(self, event: QWheelEvent) -> None:
-        super().wheelEvent(event)
-
-        if event.angleDelta().y() > 0:
-            # Scale the image up by the zoom factor
-            self.scale(ZOOM_SCALE_FACTOR, ZOOM_SCALE_FACTOR)
-
-            # Show that we have zoomed
-            self._zoomed = True
-
-        elif event.angleDelta().y() < 0:
-            # Scale the image down by the zoom factor
-            self.scale(1 / ZOOM_SCALE_FACTOR, 1 / ZOOM_SCALE_FACTOR)
-
-            # Show that we have zoomed
-            self._zoomed = True
-
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
@@ -147,6 +130,20 @@ class FullImage(QGraphicsView):
             # Set the drag mode back to scroll hand drag
             self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
 
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        super().mousePressEvent(event)
+
+        # Ignore the event if Control is held
+        if not event.modifiers() & Qt.Modifier.META: # META is actually Control
+
+            # If this is a left click and there is a rect, remove it
+            if event.button() == Qt.MouseButton.LeftButton and self._graphicsRectItem is not None:
+                # Remove the rect from the scene
+                self._scene.removeItem(self._graphicsRectItem)
+
+                # Set the rect to None
+                self._graphicsRectItem = None
+
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
 
@@ -178,3 +175,20 @@ class FullImage(QGraphicsView):
 
             # Set the fill to dodger blue, 50% opaque
             self._graphicsRectItem.setBrush(QColor(30, 144, 255, 128))
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        super().wheelEvent(event)
+
+        if event.angleDelta().y() > 0:
+            # Scale the image up by the zoom factor
+            self.scale(ZOOM_SCALE_FACTOR, ZOOM_SCALE_FACTOR)
+
+            # Show that we have zoomed
+            self._zoomed = True
+
+        elif event.angleDelta().y() < 0:
+            # Scale the image down by the zoom factor
+            self.scale(1 / ZOOM_SCALE_FACTOR, 1 / ZOOM_SCALE_FACTOR)
+
+            # Show that we have zoomed
+            self._zoomed = True

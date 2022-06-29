@@ -79,3 +79,4 @@ if __name__ == '__main__':
 #TODO: More text as thumbnails get bigger
 #TODO: Set minimum window size
 #TODO: Keep centre of image centered during resize
+#TODO: Double click to maximise / minimise
