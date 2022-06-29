@@ -192,6 +192,9 @@ class MainWindow(QMainWindow):
             # Otherwise align just to the top
             self._grid.setAlignment(Qt.AlignTop)
 
+        # Scroll the view back to the top
+        self._scroll.verticalScrollBar().setValue(0)
+
     def thumbnailClicked(self) -> None:
         # Get the widget that was clicked
         thumbnail = self.sender()
