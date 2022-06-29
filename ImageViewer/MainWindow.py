@@ -117,8 +117,7 @@ class MainWindow(QMainWindow):
         self._imageMenu.addAction(self._prevAction)
 
         # Disable the actions for now
-        self._nextAction.setEnabled(False)
-        self._prevAction.setEnabled(False)
+        self._updateMenu()
 
     def _updateMenu(self) -> None:
         self._nextAction.setEnabled(self._imageMaximised)
