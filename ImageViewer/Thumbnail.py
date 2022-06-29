@@ -4,7 +4,7 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
-from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter
+from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter, QFontMetrics
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
@@ -152,8 +152,9 @@ class Thumbnail(QWidget):
         self.repaint()
 
     def _ShortenLabelText(self, text: str) -> str:
-        # Return a maximum of 15 characters for the filename (stem only)
-        return text if len(text) <= 15 else f'{text[:6]}...{text[-6:]}'
+        # Return elided text version of the filename (stem only) that fits in the thumbnail width
+        fontMetrics = QFontMetrics(text)
+        return fontMetrics.elidedText(text, Qt.TextElideMode.ElideMiddle, self._thumbnailSize)
 
     def SetDefaultImage(self) -> None:
         if self.ImagePath.is_file():
@@ -238,6 +239,9 @@ class Thumbnail(QWidget):
 
             # Log that the load is complete
             logging.log(logging.DEBUG, f'Loaded Image {self.ImagePath}')
+
+        # Set the filename text
+        self._thumbnailText.setText(self._ShortenLabelText(self.ImagePath.stem))
 
     def ImageLoaded(self) -> None:
         # The image has been loaded so we can now reset the opacity to 100%
