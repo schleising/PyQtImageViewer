@@ -5,7 +5,7 @@ from PIL import Image
 from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
-from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
+from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor, QImage
 from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR
@@ -26,6 +26,9 @@ class FullImage(QGraphicsView):
 
         # Create a pixmap to hold the image
         self._pixmap = QPixmap()
+
+        # A Qt Image from pillow to contain the original image
+        self._qtImage: Optional[QImage] = None
 
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
@@ -73,6 +76,50 @@ class FullImage(QGraphicsView):
         # Add the pixmap to the scene and return the QGraphicsPixmapItem
         return self._scene.addPixmap(self._pixmap)
 
+    def _zoomImage(self) -> None:
+        #  Check there is a rectangle on the screen
+        if self._graphicsRectItem:
+            # Zoom to this rectangle, maintaining aspect ratio
+            self.fitInView(self._graphicsRectItem, Qt.AspectRatioMode.KeepAspectRatio)
+
+            # Remove the rectangle
+            self._scene.removeItem(self._graphicsRectItem)
+
+            # Set the rectangle to None
+            self._graphicsRectItem = None
+
+            # Indicate that we are zoomed
+            self._zoomed = True
+
+    def _cropImage(self) -> None:
+        if self._graphicsRectItem is not None and self._qtImage is not None:
+            # Copy the cropped area out of the QImage
+            self._qtImage = self._qtImage.copy(self._graphicsRectItem.rect().toRect())
+
+            # Set the pixmap to this new image
+            self._pixmap.convertFromImage(self._qtImage)
+
+            # Remove the old pixmap from the scene
+            self._scene.removeItem(self._pixmapGraphicsItem)
+
+            # Add the new pixmap to the scene
+            self._pixmapGraphicsItem = self._scene.addPixmap(self._pixmap)
+
+            # Remove the rect
+            self._scene.removeItem(self._graphicsRectItem)
+
+            # Set the rect to None
+            self._graphicsRectItem = None
+
+            # Fit the new pixmap in the view
+            self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
+
+            # Set the scene rect to the new pixmap
+            self._scene.setSceneRect(self._pixmapGraphicsItem.boundingRect())
+
+            # Indicate that we are not zoomed
+            self._zoomed = False
+
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
@@ -97,19 +144,12 @@ class FullImage(QGraphicsView):
                 self.nextImage.emit()
 
             case Qt.Key.Key_Z:
-                #  Check there is a rectangle on the screen
-                if self._graphicsRectItem:
-                    # Zoom to this rectangle, maintaining aspect ratio
-                    self.fitInView(self._graphicsRectItem, Qt.AspectRatioMode.KeepAspectRatio)
+                # Zoom the image to the rect
+                self._zoomImage()
 
-                    # Remove the rectangle
-                    self._scene.removeItem(self._graphicsRectItem)
-
-                    # Set the rectangle to None
-                    self._graphicsRectItem = None
-
-                    # Indicate that we are zoomed
-                    self._zoomed = True
+            case Qt.Key.Key_C:
+                # Crop the image
+                self._cropImage()
 
             case Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
                 # Set control held to True
