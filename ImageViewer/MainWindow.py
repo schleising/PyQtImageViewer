@@ -5,7 +5,7 @@ import logging
 
 from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QStackedWidget
 from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal, QTimer, QObject, QEvent
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
@@ -30,6 +30,9 @@ class MainWindow(QMainWindow):
 
         # Set the scroll widget to be resizable
         self._scroll.setWidgetResizable(True)
+
+        # Install an event filter on the scroll area to get the cursor key presses
+        self._scroll.installEventFilter(self)
 
         # Create a grid layout
         self._grid = QGridLayout()
@@ -90,6 +93,9 @@ class MainWindow(QMainWindow):
 
         # Add a menu for previous and next images, disabled to start with
         self._addImageMenu()
+
+        # Store up which thumbnail is highlighted
+        self._currentHighlightedThumbnail = 0
 
         # Show the window
         self.show()
@@ -248,6 +254,10 @@ class MainWindow(QMainWindow):
         # Scroll the view back to the top
         self._scroll.verticalScrollBar().setValue(0)
 
+        # Highlight the first cell
+        self._currentHighlightedThumbnail = 0
+        self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
     def thumbnailClicked(self) -> None:
         # Get the widget that was clicked
         thumbnail = self.sender()
@@ -321,9 +331,24 @@ class MainWindow(QMainWindow):
         # Enable the previous and next image actions
         self._updateMenu()
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        super().keyPressEvent(event)
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        # Check that this is a key press
+        if event.type() == QEvent.KeyPress:
+            # This is as much for the type checker as anything else...
+            if isinstance(event, QKeyEvent):
+                # Process the event
+                self.keyPressEvent(event)
 
+                # Return True to indicate that the event is accepted
+                return True
+            else:
+                # Should never reach here
+                return False
+        else:
+            # We haven't dealt with the event so return False
+            return False
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         match event.key():
             case Qt.Key.Key_Escape:
                 # Close application on Escape
@@ -337,7 +362,62 @@ class MainWindow(QMainWindow):
             self._FileBrowserKeyEvent(event)
 
     def _FileBrowserKeyEvent(self, event: QKeyEvent) -> None:
-        pass
+        match event.key():
+            case Qt.Key.Key_Left:
+                # Remove the highlight from the current thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
+
+                # Decrement the current thumbnail number
+                self._currentHighlightedThumbnail -= 1
+
+                # Bounds check
+                if self._currentHighlightedThumbnail < 0:
+                    self._currentHighlightedThumbnail = 0
+
+                # Highlight the new thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
+            case Qt.Key.Key_Right:
+                # Remove the highlight from the current thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
+
+                # Increment the current thumbnail number
+                self._currentHighlightedThumbnail += 1
+
+                # Bounds check
+                if self._currentHighlightedThumbnail >= len(self._thumbnailList):
+                    self._currentHighlightedThumbnail = len(self._thumbnailList) - 1
+
+                # Highlight the new thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
+            case Qt.Key.Key_Up:
+                # Remove the highlight from the current thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
+
+                # Decrement the current thumbnail number by the thumbnails in a row
+                self._currentHighlightedThumbnail -= self._thumbnailsPerRow
+
+                # Bounds check
+                if self._currentHighlightedThumbnail < 0:
+                    self._currentHighlightedThumbnail = 0
+
+                # Highlight the new thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+
+            case Qt.Key.Key_Down:
+                # Remove the highlight from the current thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
+
+                # Increment the current thumbnail number
+                self._currentHighlightedThumbnail += self._thumbnailsPerRow
+
+                # Bounds check
+                if self._currentHighlightedThumbnail >= len(self._thumbnailList):
+                    self._currentHighlightedThumbnail = len(self._thumbnailList) - 1
+
+                # Highlight the new thumbnail
+                self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
 
     def _ImageKeyEvent(self, event: QKeyEvent) -> None:
         pass

@@ -4,7 +4,7 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
-from PySide6.QtGui import QPixmap, QMouseEvent
+from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
@@ -12,6 +12,37 @@ from PIL.ImageQt import ImageQt
 
 # This seems to be necessary to ensure webp images can be loaded at startup
 import PIL.WebPImagePlugin as _
+
+from ImageViewer.Constants import DODGER_BLUE
+
+class PixmapLabel(QLabel):
+    def __init__(self):
+        super().__init__()
+
+        # Indicate whether the thumbnail containing this pixmap is highlighted
+        self.highlighted = False
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        super().paintEvent(event)
+
+        if self.highlighted:
+            # Create a QPainter
+            painter = QPainter()
+
+            # Get the pixmap rect
+            rect = self.rect()
+
+            # Initialise the painter
+            painter.begin(self)
+
+            # Set the fill to Dodger Blue 50% opaque
+            painter.setBrush(DODGER_BLUE)
+
+            # Draw this colour over the whole pixmap rect
+            painter.drawRect(rect)
+
+            # End the paint
+            painter.end()
 
 class Thumbnail(QWidget):
     # Class variables
@@ -47,7 +78,7 @@ class Thumbnail(QWidget):
         super().__init__(parent=parent)
 
         # Get labels for the image and filename and a layout to contain them
-        self._thumbnailImage = QLabel()
+        self._thumbnailImage = PixmapLabel()
         self._thumbnailText = QLabel()
         self._layout = QVBoxLayout()
 
@@ -72,6 +103,9 @@ class Thumbnail(QWidget):
         
         # Set the default image, withe loading or a folder
         self.SetDefaultImage()
+
+        # Indicate whether this thumbnail is highlighted
+        self._highlighted = False
 
     @classmethod
     def InitialiseDefaultImage(cls, thumbnailSize: int) -> None:
@@ -100,6 +134,22 @@ class Thumbnail(QWidget):
     def UpdateThumbnailSize(cls, thumbnailSize: int) -> None:
         # Set the thumbnail size
         cls._thumbnailSize = thumbnailSize
+
+    @property
+    def highlighted(self) -> bool:
+        # Return the current highlighted value
+        return self._highlighted
+
+    @highlighted.setter
+    def highlighted(self, highlighted: bool) -> None:
+        # Set the intenal highlighted value
+        self._highlighted = highlighted
+
+        # Ensure that the image knows it is to be highlighted (or not)
+        self._thumbnailImage.highlighted = self._highlighted
+
+        # Force a repaint of this widget
+        self.repaint()
 
     def _ShortenLabelText(self, text: str) -> str:
         # Return a maximum of 15 characters for the filename (stem only)

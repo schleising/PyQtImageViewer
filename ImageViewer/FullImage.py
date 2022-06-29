@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor, QImage
 from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
 
-from ImageViewer.Constants import ZOOM_SCALE_FACTOR
+from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE
 
 class FullImage(QGraphicsView):
     # Signal to return to browser
@@ -251,7 +251,7 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem.setPen(QColor(Qt.blue))
 
             # Set the fill to dodger blue, 50% opaque
-            self._graphicsRectItem.setBrush(QColor(30, 144, 255, 128))
+            self._graphicsRectItem.setBrush(DODGER_BLUE)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
