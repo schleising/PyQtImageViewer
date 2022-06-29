@@ -127,6 +127,10 @@ class MainWindow(QMainWindow):
         self._undoAction = QAction('Undo', self)
         self._undoAction.setShortcut(QKeySequence.Undo)
 
+        # Add a Save action
+        self._saveAction = QAction('Save', self)
+        self._saveAction.setShortcut(QKeySequence.Save)
+
         # Disable the actions for now
         self._updateMenu()
 
@@ -144,6 +148,9 @@ class MainWindow(QMainWindow):
             # Connect to the undo function of the full sized image
             self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
+            # Connect to the save function of the full sized image
+            self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
+
             # Add the actions to the Image Menu
             self._imageMenu.addAction(self._nextAction)
             self._imageMenu.addAction(self._prevAction)
@@ -153,6 +160,8 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._cropAction)
             self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._undoAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._saveAction)
         else:
             # Remove the actions from the image menu
             self._imageMenu.removeAction(self._prevAction)
@@ -161,6 +170,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.removeAction(self._resetZoomAction)
             self._imageMenu.removeAction(self._cropAction)
             self._imageMenu.removeAction(self._undoAction)
+            self._imageMenu.removeAction(self._saveAction)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)

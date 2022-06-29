@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -65,6 +66,9 @@ class FullImage(QGraphicsView):
 
         # A list containing the last n versions of this image
         self._undoBuffer: list[QImage] = []
+
+        # Boolean indicating whether a change to the image can be saved
+        self._imageCanBeSaved = False
 
     def _LoadPixmap(self) -> QGraphicsPixmapItem:
         # Use Pillow to open the image and convert to a QPixmap
@@ -140,6 +144,9 @@ class FullImage(QGraphicsView):
             # Update the pixmap
             self._updatePixmap()
 
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
     def UndoLastChange(self) -> None:
         # If there are items in the buffer
         if self._undoBuffer:
@@ -148,6 +155,18 @@ class FullImage(QGraphicsView):
 
             # Update the pixmap to this older image
             self._updatePixmap()
+
+        if not self._undoBuffer:
+            # If the undo buffer has been exhausted we are back to the original image so disable saving
+            self._imageCanBeSaved = False
+
+    def SaveImage(self) -> None:
+        if self._imageCanBeSaved and self._qtImage is not None:
+            # Construct the filename
+            filename = self._imagePath.parent / f'{self._imagePath.stem} - Modified {datetime.now().strftime("%y-%m-%d %H.%M.%S")}.png'
+
+            # Save the image
+            self._qtImage.save(filename.as_posix())
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
