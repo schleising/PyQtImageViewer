@@ -4,7 +4,15 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
-from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter, QFontMetrics, QPalette
+from PySide6.QtGui import (
+    QPixmap,
+    QMouseEvent,
+    QPaintEvent,
+    QPainter,
+    QFontMetrics,
+    QPalette,
+    QBitmap,
+)
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
@@ -22,6 +30,9 @@ class PixmapLabel(QLabel):
         # Indicate whether the thumbnail containing this pixmap is highlighted
         self.highlighted = False
 
+        # The pixmap mask
+        self._mask: Optional[QBitmap] = None
+
     def paintEvent(self, event: QPaintEvent) -> None:
         super().paintEvent(event)
 
@@ -35,8 +46,19 @@ class PixmapLabel(QLabel):
             # Move the rect to the centre of the label
             rect.moveCenter(self.rect().center())
 
+            if self.pixmap().hasAlpha():
+                # If the image has an alpha channel use this as a mask
+                self._mask = self.pixmap().mask()
+            else:
+                # Otherwose leave the mask set to None
+                self._mask = None
+
             # Initialise the painter
             painter.begin(self)
+
+            if self._mask is not None:
+                # If there is a mask, use this to clip the paint operation
+                painter.setClipRegion(self._mask)
 
             # Set the fill to Dodger Blue 50% opaque
             painter.setBrush(DODGER_BLUE_50PC)
