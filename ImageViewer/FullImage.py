@@ -6,7 +6,7 @@ from PIL import Image
 from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
-from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor, QImage
+from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
 from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
@@ -313,6 +313,9 @@ class FullImage(QGraphicsView):
         if not self._zoomed:
             # Ensure the image fits into the window if itis not already zoomed
             self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
+        else:
+            # Centre on the original scene centre
+            self.centerOn(self._oldSceneCentre)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
@@ -404,3 +407,9 @@ class FullImage(QGraphicsView):
 
             # Show that we have zoomed
             self._zoomed = True
+
+    def scrollContentsBy(self, dx: int, dy: int) -> None:
+        super().scrollContentsBy(dx, dy)
+
+        # Get the scene coordinate of the centre of this view
+        self._oldSceneCentre = self.mapToScene(self.rect().center())
