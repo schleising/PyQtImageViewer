@@ -22,13 +22,6 @@ class FullImage(QGraphicsView):
         # Use the built in drag scrolling
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
 
-        # Initialise the view
-        self.InitialiseView(imagePath)
-
-    def InitialiseView(self, imagePath:Path) -> None:
-        # Set the image path
-        self._imagePath = imagePath
-
         # Create a pixmap to hold the image
         self._pixmap = QPixmap()
 
@@ -38,8 +31,20 @@ class FullImage(QGraphicsView):
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
 
+        self._pixmapGraphicsItem: Optional[QGraphicsPixmapItem] = None
+
+        # A graphics rect item for the selection rectangle
+        self._graphicsRectItem: Optional[QGraphicsRectItem] = None
+
         # Add the scene to the view
         self.setScene(self._scene)
+
+        # Initialise the view
+        self.InitialiseView(imagePath)
+
+    def InitialiseView(self, imagePath:Path) -> None:
+        # Set the image path
+        self._imagePath = imagePath
 
         # Indicate whether we have zoomed in at all
         self._zoomed = False
@@ -53,11 +58,13 @@ class FullImage(QGraphicsView):
         # A point for the start of the drag
         self._startDragPoint: Optional[QPoint] = None
 
-        # A graphics rect item for the selection rectangle
-        self._graphicsRectItem: Optional[QGraphicsRectItem] = None
-
         # A list containing the last n versions of this image
         self._undoBuffer: list[Image.Image] = []
+
+        # If a graphics rect exists, remove it and set to None
+        if self._graphicsRectItem is not None:
+            self._scene.removeItem(self._graphicsRectItem)
+            self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
         # Boolean indicating whether a change to the image can be saved
         self._imageCanBeSaved = False
@@ -75,8 +82,15 @@ class FullImage(QGraphicsView):
         # Convert the QImage to a Pixmap
         self._pixmap.convertFromImage(qtImage)
 
+        # If there is an old pixmap, remove it and set it to None
+        if self._pixmapGraphicsItem is not None:
+            self._scene.removeItem(self._pixmapGraphicsItem)
+            self._pixmapGraphicsItem = None
+
         # Add the pixmap to the scene and return the QGraphicsPixmapItem
         self._pixmapGraphicsItem = self._scene.addPixmap(self._pixmap) 
+
+        self._scene.setSceneRect(self._pixmapGraphicsItem.boundingRect())
 
         # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
         self._pixmapGraphicsItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
@@ -122,8 +136,9 @@ class FullImage(QGraphicsView):
             # Set the pixmap to this new image
             self._pixmap.convertFromImage(qtImage)
 
-            # Remove the old pixmap from the scene
-            self._scene.removeItem(self._pixmapGraphicsItem)
+            if self._pixmapGraphicsItem is not None:
+                # Remove the old pixmap from the scene
+                self._scene.removeItem(self._pixmapGraphicsItem)
 
             # Add the new pixmap to the scene
             self._pixmapGraphicsItem = self._scene.addPixmap(self._pixmap)
@@ -319,7 +334,8 @@ class FullImage(QGraphicsView):
 
         if not self._zoomed:
             # Ensure the image fits into the window if itis not already zoomed
-            self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
+            if self._pixmapGraphicsItem is not None:
+                self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
         else:
             # Centre on the original scene centre
             self.centerOn(self._oldSceneCentre)
@@ -387,7 +403,8 @@ class FullImage(QGraphicsView):
             rect = QRectF(topLeft, bottomRight)
 
             # Constrain the rect to the pixmap
-            rect = rect.intersected(self._pixmapGraphicsItem.boundingRect())
+            if self._pixmapGraphicsItem is not None:
+                rect = rect.intersected(self._pixmapGraphicsItem.boundingRect())
 
             # Add the rect to the scene
             self._graphicsRectItem = self._scene.addRect(rect)
