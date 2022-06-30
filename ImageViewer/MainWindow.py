@@ -180,6 +180,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._undoAction)
             self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._saveAction)
+            self._imageMenu.setEnabled(True)
         else:
             # Remove the actions from the image menu
             self._imageMenu.removeAction(self._returnAction)
@@ -190,6 +191,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.removeAction(self._cropAction)
             self._imageMenu.removeAction(self._undoAction)
             self._imageMenu.removeAction(self._saveAction)
+            self._imageMenu.setEnabled(False)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
