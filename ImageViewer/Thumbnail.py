@@ -30,9 +30,6 @@ class PixmapLabel(QLabel):
         # Indicate whether the thumbnail containing this pixmap is highlighted
         self.highlighted = False
 
-        # The pixmap mask
-        self._mask: Optional[QBitmap] = None
-
     def paintEvent(self, event: QPaintEvent) -> None:
         super().paintEvent(event)
 
@@ -48,17 +45,17 @@ class PixmapLabel(QLabel):
 
             if self.pixmap().hasAlpha():
                 # If the image has an alpha channel use this as a mask
-                self._mask = self.pixmap().mask()
+                mask = self.pixmap().mask()
             else:
                 # Otherwose leave the mask set to None
-                self._mask = None
+                mask = None
 
             # Initialise the painter
             painter.begin(self)
 
-            if self._mask is not None:
+            if mask is not None:
                 # If there is a mask, use this to clip the paint operation
-                painter.setClipRegion(self._mask)
+                painter.setClipRegion(mask)
 
             # Set the fill to Dodger Blue 50% opaque
             painter.setBrush(DODGER_BLUE_50PC)
