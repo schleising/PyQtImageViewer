@@ -161,6 +161,9 @@ class Thumbnail(QWidget):
             # Get the palette
             palette = self._thumbnailText.palette()
 
+            # Store away the old colour
+            self._oldTextColour = palette.color(QPalette.WindowText)
+
             # Set the colour of the palette
             palette.setColor(QPalette.WindowText, DODGER_BLUE)
 
@@ -171,7 +174,7 @@ class Thumbnail(QWidget):
             palette = self._thumbnailText.palette()
 
             # Set the colour of the palette
-            palette.setColor(QPalette.WindowText, Qt.black)
+            palette.setColor(QPalette.WindowText, self._oldTextColour)
 
             # Apply the palette to the label
             self._thumbnailText.setPalette(palette)
