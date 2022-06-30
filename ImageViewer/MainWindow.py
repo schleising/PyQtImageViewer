@@ -421,15 +421,15 @@ class MainWindow(QMainWindow):
         self._currentImageIndex = self._imageList.index(imagePath)
 
     def _MaximiseImage(self, imagePath: Path) -> None:
-        if self._imageMaximised and self._fullSizeImage:
-            # Remove the maximised image from the stack
-            self._stack.removeWidget(self._fullSizeImage)
+        if not self._fullSizeImage:
+            # Create a graphics view with just the filename for now
+            self._fullSizeImage = FullImage(imagePath)
 
-        # Create a label with just the filename for now
-        self._fullSizeImage = FullImage(imagePath)
-
-        # Add this widget to the stack
-        self._stack.addWidget(self._fullSizeImage)
+            # Add this widget to the stack
+            self._stack.addWidget(self._fullSizeImage)
+        else:
+            # View already created, it just needs reinitialisation with the new path
+            self._fullSizeImage.InitialiseView(imagePath)
 
         # Swap the stack to this widget
         self._stack.setCurrentWidget(self._fullSizeImage)
@@ -550,10 +550,6 @@ class MainWindow(QMainWindow):
     def _returnToBrowser(self) -> None:
         # Reset the stack back to the scroll widget
         self._stack.setCurrentWidget(self._scroll)
-
-        if self._fullSizeImage:
-            # Remove the maximised image from the stack
-            self._stack.removeWidget(self._fullSizeImage)
 
         # Indicate that the image is no longer maximised
         self._imageMaximised = False
