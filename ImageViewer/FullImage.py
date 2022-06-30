@@ -12,13 +12,6 @@ from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 
 class FullImage(QGraphicsView):
-    # Signal to return to browser
-    returnToBrowser = Signal()
-
-    # Signals for previous and next images
-    previousImage = Signal()
-    nextImage = Signal()
-
     def __init__(self, imagePath: Path, parent=None):
         super().__init__(parent=parent)
 
@@ -179,10 +172,6 @@ class FullImage(QGraphicsView):
         super().keyPressEvent(event)
 
         match event.key():
-            case Qt.Key.Key_Up:
-                # Send the return to browser signal
-                self.returnToBrowser.emit()
-
             case Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
                 # Set control held to True
                 self._ctrlHeld = True

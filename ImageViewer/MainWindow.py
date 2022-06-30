@@ -104,18 +104,25 @@ class MainWindow(QMainWindow):
         # Get the menubar
         self._menuBar = self.menuBar()
 
-        # Create a Next acion to call _nextImage
+        # Create a return to browser action to call _returnToBrowser
+        self._returnAction = QAction('Return to Browser', self)
+        self._returnAction.setShortcut(Qt.Key.Key_Up)
+
+        # Create a return action to call _returnToBrowser
+        self._returnAction.triggered.connect(self._returnToBrowser) # type: ignore
+
+        # Create a Next action to call _nextImage
         self._nextAction = QAction('Next', self)
         self._nextAction.setShortcut(Qt.Key.Key_Right)
 
-        # Create a Next acion to call _nextImage
+        # Create a Next action to call _nextImage
         self._nextAction.triggered.connect(self._nextImage) # type: ignore
 
-        # Create a Previous acion to call _prevImage
+        # Create a Previous action to call _prevImage
         self._prevAction = QAction('Previous', self)
         self._prevAction.setShortcut(Qt.Key.Key_Left)
 
-        # Create a Previous acion to call _prevImage
+        # Create a Previous action to call _prevImage
         self._prevAction.triggered.connect(self._prevImage) # type: ignore
 
         # Create the Image menu
@@ -162,6 +169,7 @@ class MainWindow(QMainWindow):
             self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
 
             # Add the actions to the Image Menu
+            self._imageMenu.addAction(self._returnAction)
             self._imageMenu.addAction(self._nextAction)
             self._imageMenu.addAction(self._prevAction)
             self._imageMenu.addSeparator()
@@ -174,6 +182,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._saveAction)
         else:
             # Remove the actions from the image menu
+            self._imageMenu.removeAction(self._returnAction)
             self._imageMenu.removeAction(self._prevAction)
             self._imageMenu.removeAction(self._nextAction)
             self._imageMenu.removeAction(self._zoomAction)
@@ -316,11 +325,6 @@ class MainWindow(QMainWindow):
 
         # Create a label with just the filename for now
         self._fullSizeImage = FullImage(imagePath)
-
-        # Connect the signals
-        self._fullSizeImage.returnToBrowser.connect(self._returnToBrowser)
-        self._fullSizeImage.previousImage.connect(self._prevImage)
-        self._fullSizeImage.nextImage.connect(self._nextImage)
 
         # Add this widget to the stack
         self._stack.addWidget(self._fullSizeImage)
