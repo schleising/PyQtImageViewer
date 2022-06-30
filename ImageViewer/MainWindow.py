@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
         # Add a menu for previous and next images, disabled to start with
-        self._addImageMenu()
+        self._addMenu()
 
         # Store up which thumbnail is highlighted
         self._currentHighlightedThumbnail = 0
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         # Show the window
         self.show()
 
-    def _addImageMenu(self):
+    def _addMenu(self):
         # Get the menubar
         self._menuBar = self.menuBar()
 
@@ -146,6 +146,42 @@ class MainWindow(QMainWindow):
         self._sharpenAction = QAction('Sharpen', self)
         self._sharpenAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S))
 
+        # Add a Blur action
+        self._blurAction = QAction('Blur', self)
+        self._blurAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_B))
+
+        # Add a Contour action
+        self._contourAction = QAction('Contour', self)
+        self._contourAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_C))
+
+        # Add a Detail action
+        self._detailAction = QAction('Detail', self)
+        self._detailAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D))
+
+        # Add a Edge Enhance action
+        self._edgeEnhanceAction = QAction('Edge Enhance', self)
+        self._edgeEnhanceAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E))
+
+        # Add a Emboss action
+        self._embossAction = QAction('Emboss', self)
+        self._embossAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M))
+
+        # Add a Find Edges action
+        self._findEdgesAction = QAction('Find Edges', self)
+        self._findEdgesAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_F))
+
+        # Add a Smooth action
+        self._smoothAction = QAction('Smooth', self)
+        self._smoothAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O))
+
+        # Add a Unsharp Mask action
+        self._unsharpMaskAction = QAction('Unsharp Mask', self)
+        self._unsharpMaskAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U))
+
+        # Add a Auto Contrast action
+        self._autoContrastAction = QAction('Auto Contrast', self)
+        self._autoContrastAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A))
+
         # Add an Undo action
         self._undoAction = QAction('Undo', self)
         self._undoAction.setShortcut(QKeySequence.Undo)
@@ -171,6 +207,33 @@ class MainWindow(QMainWindow):
             # Connect to the crop function of the full sized image
             self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
 
+            # Connect to the crop function of the full sized image
+            self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
+
             # Connect to the undo function of the full sized image
             self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
@@ -192,6 +255,15 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._cropAction)
             self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._sharpenAction)
+            self._imageMenu.addAction(self._blurAction)
+            self._imageMenu.addAction(self._contourAction)
+            self._imageMenu.addAction(self._detailAction)
+            self._imageMenu.addAction(self._edgeEnhanceAction)
+            self._imageMenu.addAction(self._embossAction)
+            self._imageMenu.addAction(self._findEdgesAction)
+            self._imageMenu.addAction(self._smoothAction)
+            self._imageMenu.addAction(self._unsharpMaskAction)
+            self._imageMenu.addAction(self._autoContrastAction)
             self._imageMenu.addSeparator()            
             self._imageMenu.addAction(self._undoAction)
             self._imageMenu.setEnabled(True)
@@ -209,6 +281,15 @@ class MainWindow(QMainWindow):
 
             self._imageMenu.removeAction(self._cropAction)
             self._imageMenu.removeAction(self._sharpenAction)
+            self._imageMenu.removeAction(self._blurAction)
+            self._imageMenu.removeAction(self._contourAction)
+            self._imageMenu.removeAction(self._detailAction)
+            self._imageMenu.removeAction(self._edgeEnhanceAction)
+            self._imageMenu.removeAction(self._embossAction)
+            self._imageMenu.removeAction(self._findEdgesAction)
+            self._imageMenu.removeAction(self._smoothAction)
+            self._imageMenu.removeAction(self._unsharpMaskAction)
+            self._imageMenu.removeAction(self._autoContrastAction)
             self._imageMenu.removeAction(self._undoAction)
             self._imageMenu.setEnabled(False)
 
