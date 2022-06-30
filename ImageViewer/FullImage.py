@@ -81,6 +81,9 @@ class FullImage(QGraphicsView):
         # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
         self._pixmapGraphicsItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
+        # Reset the zoom
+        self.ResetZoom()
+
     def ZoomImage(self) -> None:
         #  Check there is a rectangle on the screen
         if self._graphicsRectItem:
@@ -97,7 +100,7 @@ class FullImage(QGraphicsView):
             self._zoomed = True
 
     def ResetZoom(self) -> None:
-        if self._zoomed and self._pixmapGraphicsItem:
+        if self._pixmapGraphicsItem:
             # Reset the zoom so the whol imaage is visible in the window
             self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
 
