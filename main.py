@@ -71,6 +71,4 @@ if __name__ == '__main__':
     sys.exit(exitCode)
 
 #TODO: Better image transitions
-#TODO: Implement filters
-#TODO: Implement help
 #TODO: Keep centre of image centered during resize
