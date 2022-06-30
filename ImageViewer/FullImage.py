@@ -16,6 +16,16 @@ class FullImage(QGraphicsView):
     def __init__(self, imagePath: Path, parent=None):
         super().__init__(parent=parent)
 
+        # Ensure transformations happen under the mouse position
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+
+        # Use the built in drag scrolling
+        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+
+        # Initialise the view
+        self.InitialiseView(imagePath)
+
+    def InitialiseView(self, imagePath:Path) -> None:
         # Set the image path
         self._imagePath = imagePath
 
@@ -28,20 +38,8 @@ class FullImage(QGraphicsView):
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
 
-        # Ensure transformations happen under the mouse position
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-
-        # Use the built in drag scrolling
-        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-
         # Add the scene to the view
         self.setScene(self._scene)
-
-        # Load the image, convert it to a pixmap and add it to the scene
-        self._pixmapGraphicsItem = self._LoadPixmap()
-
-        # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
-        self._pixmapGraphicsItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
         # Indicate whether we have zoomed in at all
         self._zoomed = False
@@ -64,7 +62,10 @@ class FullImage(QGraphicsView):
         # Boolean indicating whether a change to the image can be saved
         self._imageCanBeSaved = False
 
-    def _LoadPixmap(self) -> QGraphicsPixmapItem:
+        # Load the image, convert it to a pixmap and add it to the scene
+        self._LoadPixmap()
+
+    def _LoadPixmap(self) -> None:
         # Use Pillow to open the image and convert to a QPixmap
         self._pilImage = Image.open(self._imagePath)
 
@@ -75,7 +76,10 @@ class FullImage(QGraphicsView):
         self._pixmap.convertFromImage(qtImage)
 
         # Add the pixmap to the scene and return the QGraphicsPixmapItem
-        return self._scene.addPixmap(self._pixmap)
+        self._pixmapGraphicsItem = self._scene.addPixmap(self._pixmap) 
+
+        # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
+        self._pixmapGraphicsItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
     def ZoomImage(self) -> None:
         #  Check there is a rectangle on the screen
