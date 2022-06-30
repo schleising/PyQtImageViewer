@@ -13,7 +13,7 @@ from PIL.ImageQt import ImageQt
 # This seems to be necessary to ensure webp images can be loaded at startup
 import PIL.WebPImagePlugin as _
 
-from ImageViewer.Constants import DODGER_BLUE
+from ImageViewer.Constants import DODGER_BLUE, DODGER_BLUE_50PC
 
 class PixmapLabel(QLabel):
     def __init__(self):
@@ -30,16 +30,19 @@ class PixmapLabel(QLabel):
             painter = QPainter()
 
             # Get the pixmap rect
-            rect = self.rect()
+            rect = self.pixmap().rect()
+
+            # Move the rect to the centre of the label
+            rect.moveCenter(self.rect().center())
 
             # Initialise the painter
             painter.begin(self)
 
             # Set the fill to Dodger Blue 50% opaque
-            painter.setBrush(DODGER_BLUE)
+            painter.setBrush(DODGER_BLUE_50PC)
 
             # Set the pen to Dodger Blue too
-            painter.setPen(DODGER_BLUE)
+            painter.setPen(DODGER_BLUE_50PC)
 
             # Draw this colour over the whole pixmap rect
             painter.drawRect(rect)
@@ -85,11 +88,14 @@ class Thumbnail(QWidget):
         self._thumbnailText = QLabel()
         self._layout = QVBoxLayout()
 
+        # Set the minimum size of this widget
+        self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
+
         # Set the layout margins to 0 so they don't add to the grid margins
         self._layout.setContentsMargins(0, 0, 0, 0)
 
         # Add the image and text labels to the layout
-        self._layout.addWidget(self._thumbnailImage, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self._layout.addWidget(self._thumbnailImage, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(self._thumbnailText, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         # Add the layout to this widget
@@ -156,7 +162,7 @@ class Thumbnail(QWidget):
             palette = self._thumbnailText.palette()
 
             # Set the colour of the palette
-            palette.setColor(QPalette.WindowText, '#1E90FF')
+            palette.setColor(QPalette.WindowText, DODGER_BLUE)
 
             # Apply the palette to the label
             self._thumbnailText.setPalette(palette)
@@ -165,7 +171,7 @@ class Thumbnail(QWidget):
             palette = self._thumbnailText.palette()
 
             # Set the colour of the palette
-            palette.setColor(QPalette.WindowText, Qt.white)
+            palette.setColor(QPalette.WindowText, Qt.black)
 
             # Apply the palette to the label
             self._thumbnailText.setPalette(palette)
@@ -183,6 +189,9 @@ class Thumbnail(QWidget):
             if self._defaultImage:
                 # if this is a file, set the default loading image for now
                 self._thumbnailImage.setPixmap(self._defaultImage)
+
+                # Ensure the pixmap is aligned in the centre
+                self._thumbnailImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
                 # Get an opacity effect
                 opacityEffect = QGraphicsOpacityEffect(self)
@@ -206,7 +215,14 @@ class Thumbnail(QWidget):
 
                 # Scale the pixmap to the thumbnail size
                 currentFolderImage = folderPixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
+
+                # Set the folder image as the current pixmap
                 self._thumbnailImage.setPixmap(currentFolderImage)
+
+                # Ensure the pixmap is aligned in the centre of the label
+                self._thumbnailImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+                # Set the folder image as the current image
                 self._currentImage = currentFolderImage
 
         # Set the filename text
@@ -237,6 +253,9 @@ class Thumbnail(QWidget):
 
     def ResizeImage(self) -> None:
         pixmap = QPixmap()
+
+        # Set the minimum size of this widget
+        self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
 
         # Log that the image has been loaded and we are ready to resize it to fit the label
         logging.log(logging.DEBUG, f'Resizing Image {self.ImagePath}')
