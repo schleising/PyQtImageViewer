@@ -31,6 +31,7 @@ class FullImage(QGraphicsView):
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
 
+        # A pixmap graphics item for the image
         self._pixmapGraphicsItem: Optional[QGraphicsPixmapItem] = None
 
         # A graphics rect item for the selection rectangle
@@ -130,7 +131,7 @@ class FullImage(QGraphicsView):
                 # Set the rect to None
                 self._graphicsRectItem = None
 
-
+            # Convert the pillow image into a QImage
             qtImage = self._pilImage.toqimage()
 
             # Set the pixmap to this new image
@@ -157,9 +158,10 @@ class FullImage(QGraphicsView):
             # Add the current QImage to the undo buffer
             self._undoBuffer.append(self._pilImage.copy())
 
-            # Copy the cropped area out of the QImage
+            # Get the rect to be cropped
             rect = self._graphicsRectItem.rect().toRect()
 
+            # Copy the cropped area out of the QImage
             self._pilImage = self._pilImage.crop((rect.left(), rect.top(), rect.right(), rect.bottom()))
 
             # Update the pixmap
