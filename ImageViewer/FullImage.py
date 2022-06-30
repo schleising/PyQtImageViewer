@@ -7,18 +7,12 @@ from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor, QImage
-from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
-from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE
+from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
+import ImageViewer.ImageTools as ImageTools
 
 class FullImage(QGraphicsView):
-    # Signal to return to browser
-    returnToBrowser = Signal()
-
-    # Signals for previous and next images
-    previousImage = Signal()
-    nextImage = Signal()
-
     def __init__(self, imagePath: Path, parent=None):
         super().__init__(parent=parent)
 
@@ -29,7 +23,7 @@ class FullImage(QGraphicsView):
         self._pixmap = QPixmap()
 
         # A Qt Image from pillow to contain the original image
-        self._qtImage: Optional[QImage] = None
+        self._pilImage: Optional[Image.Image] = None
 
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
@@ -65,20 +59,20 @@ class FullImage(QGraphicsView):
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
         # A list containing the last n versions of this image
-        self._undoBuffer: list[QImage] = []
+        self._undoBuffer: list[Image.Image] = []
 
         # Boolean indicating whether a change to the image can be saved
         self._imageCanBeSaved = False
 
     def _LoadPixmap(self) -> QGraphicsPixmapItem:
         # Use Pillow to open the image and convert to a QPixmap
-        pilImage = Image.open(self._imagePath)
+        self._pilImage = Image.open(self._imagePath)
 
         # Convert to a QImage
-        self._qtImage = ImageQt(pilImage)
+        qtImage = ImageQt(self._pilImage)
 
         # Convert the QImage to a Pixmap
-        self._pixmap.convertFromImage(self._qtImage)
+        self._pixmap.convertFromImage(qtImage)
 
         # Add the pixmap to the scene and return the QGraphicsPixmapItem
         return self._scene.addPixmap(self._pixmap)
@@ -107,7 +101,7 @@ class FullImage(QGraphicsView):
             self._zoomed = False
 
     def _updatePixmap(self) -> None:
-        if self._qtImage is not None:
+        if self._pilImage is not None:
             if self._graphicsRectItem is not None:
                 # Remove the rect if it exists
                 self._scene.removeItem(self._graphicsRectItem)
@@ -115,8 +109,11 @@ class FullImage(QGraphicsView):
                 # Set the rect to None
                 self._graphicsRectItem = None
 
+
+            qtImage = self._pilImage.toqimage()
+
             # Set the pixmap to this new image
-            self._pixmap.convertFromImage(self._qtImage)
+            self._pixmap.convertFromImage(qtImage)
 
             # Remove the old pixmap from the scene
             self._scene.removeItem(self._pixmapGraphicsItem)
@@ -134,12 +131,14 @@ class FullImage(QGraphicsView):
             self._zoomed = False
 
     def CropImage(self) -> None:
-        if self._graphicsRectItem is not None and self._qtImage is not None:
+        if self._graphicsRectItem is not None and self._pilImage is not None:
             # Add the current QImage to the undo buffer
-            self._undoBuffer.append(self._qtImage.copy())
+            self._undoBuffer.append(self._pilImage.copy())
 
             # Copy the cropped area out of the QImage
-            self._qtImage = self._qtImage.copy(self._graphicsRectItem.rect().toRect())
+            rect = self._graphicsRectItem.rect().toRect()
+
+            self._pilImage = self._pilImage.crop((rect.left(), rect.top(), rect.right(), rect.bottom()))
 
             # Update the pixmap
             self._updatePixmap()
@@ -151,7 +150,7 @@ class FullImage(QGraphicsView):
         # If there are items in the buffer
         if self._undoBuffer:
             # Pop the latest image off the buffer
-            self._qtImage = self._undoBuffer.pop()
+            self._pilImage = self._undoBuffer.pop()
 
             # Update the pixmap to this older image
             self._updatePixmap()
@@ -161,12 +160,152 @@ class FullImage(QGraphicsView):
             self._imageCanBeSaved = False
 
     def SaveImage(self) -> None:
-        if self._imageCanBeSaved and self._qtImage is not None:
+        if self._imageCanBeSaved and self._pilImage is not None:
             # Construct the filename
             filename = self._imagePath.parent / f'{self._imagePath.stem} - Modified {datetime.now().strftime("%y-%m-%d %H.%M.%S")}.png'
 
             # Save the image
-            self._qtImage.save(filename.as_posix())
+            self._pilImage.save(filename)
+
+    def Sharpen(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Sharpen(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def Blur(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Blur(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def Contour(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Contour(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def Detail(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Detail(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def EdgeEnhance(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.EdgeEnhance(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def Emboss(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Emboss(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def FindEdges(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.FindEdges(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def Smooth(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Smooth(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def UnsharpMask(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.UnsharpMask(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
+
+    def AutoContrast(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.AutoContrast(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
+
+            # Indicate that the image can be saved
+            self._imageCanBeSaved = True
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
@@ -179,10 +318,6 @@ class FullImage(QGraphicsView):
         super().keyPressEvent(event)
 
         match event.key():
-            case Qt.Key.Key_Up:
-                # Send the return to browser signal
-                self.returnToBrowser.emit()
-
             case Qt.Key.Key_Meta: # In Qt Mac Control = Key_Meta, Command = Key_Control
                 # Set control held to True
                 self._ctrlHeld = True
@@ -251,7 +386,7 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem.setPen(QColor(Qt.blue))
 
             # Set the fill to dodger blue, 50% opaque
-            self._graphicsRectItem.setBrush(DODGER_BLUE)
+            self._graphicsRectItem.setBrush(DODGER_BLUE_50PC)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)

@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
         # Add a menu for previous and next images, disabled to start with
-        self._addImageMenu()
+        self._addMenu()
 
         # Store up which thumbnail is highlighted
         self._currentHighlightedThumbnail = 0
@@ -100,25 +100,34 @@ class MainWindow(QMainWindow):
         # Show the window
         self.show()
 
-    def _addImageMenu(self):
+    def _addMenu(self):
         # Get the menubar
         self._menuBar = self.menuBar()
 
-        # Create a Next acion to call _nextImage
+        # Create a return to browser action to call _returnToBrowser
+        self._returnAction = QAction('Return to Browser', self)
+        self._returnAction.setShortcut(Qt.Key.Key_Up)
+
+        # Create a return action to call _returnToBrowser
+        self._returnAction.triggered.connect(self._returnToBrowser) # type: ignore
+
+        # Create a Next action to call _nextImage
         self._nextAction = QAction('Next', self)
         self._nextAction.setShortcut(Qt.Key.Key_Right)
 
-        # Create a Next acion to call _nextImage
+        # Create a Next action to call _nextImage
         self._nextAction.triggered.connect(self._nextImage) # type: ignore
 
-        # Create a Previous acion to call _prevImage
+        # Create a Previous action to call _prevImage
         self._prevAction = QAction('Previous', self)
         self._prevAction.setShortcut(Qt.Key.Key_Left)
 
-        # Create a Previous acion to call _prevImage
+        # Create a Previous action to call _prevImage
         self._prevAction.triggered.connect(self._prevImage) # type: ignore
 
-        # Create the Image menu
+        # Create the menus
+        self._fileMenu = self._menuBar.addMenu('File')
+        self._viewMenu = self._menuBar.addMenu('Show')
         self._imageMenu = self._menuBar.addMenu('Image')
 
         # Add a zoom to rect action
@@ -132,6 +141,46 @@ class MainWindow(QMainWindow):
         # Add a crop to rect action
         self._cropAction = QAction('Crop to Rect', self)
         self._cropAction.setShortcut(Qt.Key.Key_C)
+
+        # Add a Sharpen action
+        self._sharpenAction = QAction('Sharpen', self)
+        self._sharpenAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S))
+
+        # Add a Blur action
+        self._blurAction = QAction('Blur', self)
+        self._blurAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_B))
+
+        # Add a Contour action
+        self._contourAction = QAction('Contour', self)
+        self._contourAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_C))
+
+        # Add a Detail action
+        self._detailAction = QAction('Detail', self)
+        self._detailAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D))
+
+        # Add a Edge Enhance action
+        self._edgeEnhanceAction = QAction('Edge Enhance', self)
+        self._edgeEnhanceAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E))
+
+        # Add a Emboss action
+        self._embossAction = QAction('Emboss', self)
+        self._embossAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M))
+
+        # Add a Find Edges action
+        self._findEdgesAction = QAction('Find Edges', self)
+        self._findEdgesAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_F))
+
+        # Add a Smooth action
+        self._smoothAction = QAction('Smooth', self)
+        self._smoothAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O))
+
+        # Add a Unsharp Mask action
+        self._unsharpMaskAction = QAction('Unsharp Mask', self)
+        self._unsharpMaskAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U))
+
+        # Add a Auto Contrast action
+        self._autoContrastAction = QAction('Auto Contrast', self)
+        self._autoContrastAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A))
 
         # Add an Undo action
         self._undoAction = QAction('Undo', self)
@@ -155,6 +204,36 @@ class MainWindow(QMainWindow):
             # Connect to the crop function of the full sized image
             self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
+            # Connect to the crop function of the full sized image
+            self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
+
+            # Connect to the crop function of the full sized image
+            self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
+
             # Connect to the undo function of the full sized image
             self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
@@ -162,25 +241,57 @@ class MainWindow(QMainWindow):
             self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
 
             # Add the actions to the Image Menu
-            self._imageMenu.addAction(self._nextAction)
-            self._imageMenu.addAction(self._prevAction)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction(self._zoomAction)
-            self._imageMenu.addAction(self._resetZoomAction)
+            self._fileMenu.addAction(self._saveAction)
+            self._fileMenu.setEnabled(True)
+
+            self._viewMenu.addAction(self._returnAction)
+            self._viewMenu.addAction(self._nextAction)
+            self._viewMenu.addAction(self._prevAction)
+            self._viewMenu.addSeparator()
+            self._viewMenu.addAction(self._zoomAction)
+            self._viewMenu.addAction(self._resetZoomAction)
+            self._viewMenu.setEnabled(True)
+
             self._imageMenu.addAction(self._cropAction)
             self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._sharpenAction)
+            self._imageMenu.addAction(self._blurAction)
+            self._imageMenu.addAction(self._contourAction)
+            self._imageMenu.addAction(self._detailAction)
+            self._imageMenu.addAction(self._edgeEnhanceAction)
+            self._imageMenu.addAction(self._embossAction)
+            self._imageMenu.addAction(self._findEdgesAction)
+            self._imageMenu.addAction(self._smoothAction)
+            self._imageMenu.addAction(self._unsharpMaskAction)
+            self._imageMenu.addAction(self._autoContrastAction)
+            self._imageMenu.addSeparator()            
             self._imageMenu.addAction(self._undoAction)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction(self._saveAction)
+            self._imageMenu.setEnabled(True)
         else:
             # Remove the actions from the image menu
-            self._imageMenu.removeAction(self._prevAction)
-            self._imageMenu.removeAction(self._nextAction)
-            self._imageMenu.removeAction(self._zoomAction)
-            self._imageMenu.removeAction(self._resetZoomAction)
+            self._fileMenu.removeAction(self._saveAction)
+            self._fileMenu.setEnabled(False)
+
+            self._viewMenu.removeAction(self._returnAction)
+            self._viewMenu.removeAction(self._prevAction)
+            self._viewMenu.removeAction(self._nextAction)
+            self._viewMenu.removeAction(self._zoomAction)
+            self._viewMenu.removeAction(self._resetZoomAction)
+            self._viewMenu.setEnabled(False)
+
             self._imageMenu.removeAction(self._cropAction)
+            self._imageMenu.removeAction(self._sharpenAction)
+            self._imageMenu.removeAction(self._blurAction)
+            self._imageMenu.removeAction(self._contourAction)
+            self._imageMenu.removeAction(self._detailAction)
+            self._imageMenu.removeAction(self._edgeEnhanceAction)
+            self._imageMenu.removeAction(self._embossAction)
+            self._imageMenu.removeAction(self._findEdgesAction)
+            self._imageMenu.removeAction(self._smoothAction)
+            self._imageMenu.removeAction(self._unsharpMaskAction)
+            self._imageMenu.removeAction(self._autoContrastAction)
             self._imageMenu.removeAction(self._undoAction)
-            self._imageMenu.removeAction(self._saveAction)
+            self._imageMenu.setEnabled(False)
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
@@ -316,11 +427,6 @@ class MainWindow(QMainWindow):
 
         # Create a label with just the filename for now
         self._fullSizeImage = FullImage(imagePath)
-
-        # Connect the signals
-        self._fullSizeImage.returnToBrowser.connect(self._returnToBrowser)
-        self._fullSizeImage.previousImage.connect(self._prevImage)
-        self._fullSizeImage.nextImage.connect(self._nextImage)
 
         # Add this widget to the stack
         self._stack.addWidget(self._fullSizeImage)

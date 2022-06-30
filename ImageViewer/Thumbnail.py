@@ -4,7 +4,15 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
-from PySide6.QtGui import QPixmap, QMouseEvent, QPaintEvent, QPainter
+from PySide6.QtGui import (
+    QPixmap,
+    QMouseEvent,
+    QPaintEvent,
+    QPainter,
+    QFontMetrics,
+    QPalette,
+    QBitmap,
+)
 from PySide6.QtCore import Qt, Signal
 
 from PIL import Image
@@ -13,7 +21,7 @@ from PIL.ImageQt import ImageQt
 # This seems to be necessary to ensure webp images can be loaded at startup
 import PIL.WebPImagePlugin as _
 
-from ImageViewer.Constants import DODGER_BLUE
+from ImageViewer.Constants import DODGER_BLUE, DODGER_BLUE_50PC
 
 class PixmapLabel(QLabel):
     def __init__(self):
@@ -30,13 +38,30 @@ class PixmapLabel(QLabel):
             painter = QPainter()
 
             # Get the pixmap rect
-            rect = self.rect()
+            rect = self.pixmap().rect()
+
+            # Move the rect to the centre of the label
+            rect.moveCenter(self.rect().center())
+
+            if self.pixmap().hasAlpha():
+                # If the image has an alpha channel use this as a mask
+                mask = self.pixmap().mask()
+            else:
+                # Otherwose leave the mask set to None
+                mask = None
 
             # Initialise the painter
             painter.begin(self)
 
+            if mask is not None:
+                # If there is a mask, use this to clip the paint operation
+                painter.setClipRegion(mask)
+
             # Set the fill to Dodger Blue 50% opaque
-            painter.setBrush(DODGER_BLUE)
+            painter.setBrush(DODGER_BLUE_50PC)
+
+            # Set the pen to Dodger Blue too
+            painter.setPen(DODGER_BLUE_50PC)
 
             # Draw this colour over the whole pixmap rect
             painter.drawRect(rect)
@@ -82,11 +107,14 @@ class Thumbnail(QWidget):
         self._thumbnailText = QLabel()
         self._layout = QVBoxLayout()
 
+        # Set the minimum size of this widget
+        self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
+
         # Set the layout margins to 0 so they don't add to the grid margins
         self._layout.setContentsMargins(0, 0, 0, 0)
 
         # Add the image and text labels to the layout
-        self._layout.addWidget(self._thumbnailImage, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self._layout.addWidget(self._thumbnailImage, alignment=Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(self._thumbnailText, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         # Add the layout to this widget
@@ -148,18 +176,44 @@ class Thumbnail(QWidget):
         # Ensure that the image knows it is to be highlighted (or not)
         self._thumbnailImage.highlighted = self._highlighted
 
+        if self._highlighted:
+            # Get the palette
+            palette = self._thumbnailText.palette()
+
+            # Store away the old colour
+            self._oldTextColour = palette.color(QPalette.WindowText)
+
+            # Set the colour of the palette
+            palette.setColor(QPalette.WindowText, DODGER_BLUE)
+
+            # Apply the palette to the label
+            self._thumbnailText.setPalette(palette)
+        else:
+            # Get the palette
+            palette = self._thumbnailText.palette()
+
+            # Set the colour of the palette
+            palette.setColor(QPalette.WindowText, self._oldTextColour)
+
+            # Apply the palette to the label
+            self._thumbnailText.setPalette(palette)
+
         # Force a repaint of this widget
         self.repaint()
 
     def _ShortenLabelText(self, text: str) -> str:
-        # Return a maximum of 15 characters for the filename (stem only)
-        return text if len(text) <= 15 else f'{text[:6]}...{text[-6:]}'
+        # Return elided text version of the filename (stem only) that fits in the thumbnail width
+        fontMetrics = QFontMetrics(self._thumbnailText.font())
+        return fontMetrics.elidedText(text, Qt.TextElideMode.ElideMiddle, self._thumbnailSize)
 
     def SetDefaultImage(self) -> None:
         if self.ImagePath.is_file():
             if self._defaultImage:
                 # if this is a file, set the default loading image for now
                 self._thumbnailImage.setPixmap(self._defaultImage)
+
+                # Ensure the pixmap is aligned in the centre
+                self._thumbnailImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
                 # Get an opacity effect
                 opacityEffect = QGraphicsOpacityEffect(self)
@@ -183,7 +237,14 @@ class Thumbnail(QWidget):
 
                 # Scale the pixmap to the thumbnail size
                 currentFolderImage = folderPixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
+
+                # Set the folder image as the current pixmap
                 self._thumbnailImage.setPixmap(currentFolderImage)
+
+                # Ensure the pixmap is aligned in the centre of the label
+                self._thumbnailImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+                # Set the folder image as the current image
                 self._currentImage = currentFolderImage
 
         # Set the filename text
@@ -215,6 +276,9 @@ class Thumbnail(QWidget):
     def ResizeImage(self) -> None:
         pixmap = QPixmap()
 
+        # Set the minimum size of this widget
+        self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
+
         # Log that the image has been loaded and we are ready to resize it to fit the label
         logging.log(logging.DEBUG, f'Resizing Image {self.ImagePath}')
 
@@ -238,6 +302,9 @@ class Thumbnail(QWidget):
 
             # Log that the load is complete
             logging.log(logging.DEBUG, f'Loaded Image {self.ImagePath}')
+
+        # Set the filename text
+        self._thumbnailText.setText(self._ShortenLabelText(self.ImagePath.stem))
 
     def ImageLoaded(self) -> None:
         # The image has been loaded so we can now reset the opacity to 100%
