@@ -142,6 +142,10 @@ class MainWindow(QMainWindow):
         self._cropAction = QAction('Crop to Rect', self)
         self._cropAction.setShortcut(Qt.Key.Key_C)
 
+        # Add a Sharpen action
+        self._sharpenAction = QAction('Sharpen', self)
+        self._sharpenAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S))
+
         # Add an Undo action
         self._undoAction = QAction('Undo', self)
         self._undoAction.setShortcut(QKeySequence.Undo)
@@ -164,6 +168,9 @@ class MainWindow(QMainWindow):
             # Connect to the crop function of the full sized image
             self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
+            # Connect to the crop function of the full sized image
+            self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
+
             # Connect to the undo function of the full sized image
             self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
@@ -184,6 +191,8 @@ class MainWindow(QMainWindow):
 
             self._imageMenu.addAction(self._cropAction)
             self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._sharpenAction)
+            self._imageMenu.addSeparator()            
             self._imageMenu.addAction(self._undoAction)
             self._imageMenu.setEnabled(True)
         else:
@@ -199,6 +208,7 @@ class MainWindow(QMainWindow):
             self._viewMenu.setEnabled(False)
 
             self._imageMenu.removeAction(self._cropAction)
+            self._imageMenu.removeAction(self._sharpenAction)
             self._imageMenu.removeAction(self._undoAction)
             self._imageMenu.setEnabled(False)
 

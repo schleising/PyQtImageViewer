@@ -7,9 +7,10 @@ from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor, QImage
-from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
+import ImageViewer.ImageTools as ImageTools
 
 class FullImage(QGraphicsView):
     def __init__(self, imagePath: Path, parent=None):
@@ -165,6 +166,17 @@ class FullImage(QGraphicsView):
 
             # Save the image
             self._pilImage.save(filename)
+
+    def Sharpen(self) -> None:
+        if self._pilImage is not None:
+            # Add the current image to the undo buffer
+            self._undoBuffer.append(self._pilImage)
+
+            # Update the image with the new version
+            self._pilImage = ImageTools.Sharpen(self._pilImage)
+
+            # Update the pixmap
+            self._updatePixmap()
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
