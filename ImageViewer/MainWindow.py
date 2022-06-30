@@ -125,7 +125,9 @@ class MainWindow(QMainWindow):
         # Create a Previous action to call _prevImage
         self._prevAction.triggered.connect(self._prevImage) # type: ignore
 
-        # Create the Image menu
+        # Create the menus
+        self._fileMenu = self._menuBar.addMenu('File')
+        self._viewMenu = self._menuBar.addMenu('Show')
         self._imageMenu = self._menuBar.addMenu('Image')
 
         # Add a zoom to rect action
@@ -169,28 +171,35 @@ class MainWindow(QMainWindow):
             self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
 
             # Add the actions to the Image Menu
-            self._imageMenu.addAction(self._returnAction)
-            self._imageMenu.addAction(self._nextAction)
-            self._imageMenu.addAction(self._prevAction)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction(self._zoomAction)
-            self._imageMenu.addAction(self._resetZoomAction)
+            self._fileMenu.addAction(self._saveAction)
+            self._fileMenu.setEnabled(True)
+
+            self._viewMenu.addAction(self._returnAction)
+            self._viewMenu.addAction(self._nextAction)
+            self._viewMenu.addAction(self._prevAction)
+            self._viewMenu.addSeparator()
+            self._viewMenu.addAction(self._zoomAction)
+            self._viewMenu.addAction(self._resetZoomAction)
+            self._viewMenu.setEnabled(True)
+
             self._imageMenu.addAction(self._cropAction)
             self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._undoAction)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction(self._saveAction)
             self._imageMenu.setEnabled(True)
         else:
             # Remove the actions from the image menu
-            self._imageMenu.removeAction(self._returnAction)
-            self._imageMenu.removeAction(self._prevAction)
-            self._imageMenu.removeAction(self._nextAction)
-            self._imageMenu.removeAction(self._zoomAction)
-            self._imageMenu.removeAction(self._resetZoomAction)
+            self._fileMenu.removeAction(self._saveAction)
+            self._fileMenu.setEnabled(False)
+
+            self._viewMenu.removeAction(self._returnAction)
+            self._viewMenu.removeAction(self._prevAction)
+            self._viewMenu.removeAction(self._nextAction)
+            self._viewMenu.removeAction(self._zoomAction)
+            self._viewMenu.removeAction(self._resetZoomAction)
+            self._viewMenu.setEnabled(False)
+
             self._imageMenu.removeAction(self._cropAction)
             self._imageMenu.removeAction(self._undoAction)
-            self._imageMenu.removeAction(self._saveAction)
             self._imageMenu.setEnabled(False)
 
     def _GetImagePathList(self) -> list[Path]:
