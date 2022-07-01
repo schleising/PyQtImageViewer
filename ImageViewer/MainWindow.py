@@ -97,6 +97,9 @@ class MainWindow(QMainWindow):
         # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
+        # Boolean to indicate whether we have already added the actions
+        self._actionsAdded = False
+
         # Add a menu for previous and next images, disabled to start with
         self._addMenu()
 
@@ -204,102 +207,90 @@ class MainWindow(QMainWindow):
 
     def _updateMenu(self) -> None:
         if self._imageMaximised and self._fullSizeImage is not None:
-            # Connect to the zoom function of the full sized image
-            self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
 
-            # Connect to the reset zoom function of the full sized image
-            self._resetZoomAction.triggered.connect(self._fullSizeImage.ResetZoom) # type: ignore
+            # Only add the actions if they haven't already been added
+            if not self._actionsAdded:
+                # Connect to the zoom function of the full sized image
+                self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
+                # Connect to the reset zoom function of the full sized image
+                self._resetZoomAction.triggered.connect(self._fullSizeImage.ResetZoom) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
 
-            # Connect to the crop function of the full sized image
-            self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
 
-            # Connect to the undo function of the full sized image
-            self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
+                # Connect to the crop function of the full sized image
+                self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
 
-            # Connect to the save function of the full sized image
-            self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
+                # Connect to the undo function of the full sized image
+                self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
-            # Add the actions to the Image Menu
-            self._fileMenu.addAction(self._saveAction)
+                # Connect to the save function of the full sized image
+                self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
+
+                # Add the actions to the menus
+                self._fileMenu.addAction(self._saveAction)
+
+                self._viewMenu.addAction(self._returnAction)
+                self._viewMenu.addAction(self._nextAction)
+                self._viewMenu.addAction(self._prevAction)
+                self._viewMenu.addSeparator()
+                self._viewMenu.addAction(self._zoomAction)
+                self._viewMenu.addAction(self._resetZoomAction)
+
+                self._imageMenu.addAction(self._cropAction)
+                self._imageMenu.addSeparator()
+                self._imageMenu.addAction(self._sharpenAction)
+                self._imageMenu.addAction(self._blurAction)
+                self._imageMenu.addAction(self._contourAction)
+                self._imageMenu.addAction(self._detailAction)
+                self._imageMenu.addAction(self._edgeEnhanceAction)
+                self._imageMenu.addAction(self._embossAction)
+                self._imageMenu.addAction(self._findEdgesAction)
+                self._imageMenu.addAction(self._smoothAction)
+                self._imageMenu.addAction(self._unsharpMaskAction)
+                self._imageMenu.addAction(self._autoContrastAction)
+                self._imageMenu.addSeparator()            
+                self._imageMenu.addAction(self._undoAction)
+
+                # Indicate that the actions have been added
+                self._actionsAdded = True
+
+            # Enable the menus
             self._fileMenu.setEnabled(True)
-
-            self._viewMenu.addAction(self._returnAction)
-            self._viewMenu.addAction(self._nextAction)
-            self._viewMenu.addAction(self._prevAction)
-            self._viewMenu.addSeparator()
-            self._viewMenu.addAction(self._zoomAction)
-            self._viewMenu.addAction(self._resetZoomAction)
             self._viewMenu.setEnabled(True)
-
-            self._imageMenu.addAction(self._cropAction)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction(self._sharpenAction)
-            self._imageMenu.addAction(self._blurAction)
-            self._imageMenu.addAction(self._contourAction)
-            self._imageMenu.addAction(self._detailAction)
-            self._imageMenu.addAction(self._edgeEnhanceAction)
-            self._imageMenu.addAction(self._embossAction)
-            self._imageMenu.addAction(self._findEdgesAction)
-            self._imageMenu.addAction(self._smoothAction)
-            self._imageMenu.addAction(self._unsharpMaskAction)
-            self._imageMenu.addAction(self._autoContrastAction)
-            self._imageMenu.addSeparator()            
-            self._imageMenu.addAction(self._undoAction)
             self._imageMenu.setEnabled(True)
         else:
-            # Remove the actions from the image menu
-            self._fileMenu.removeAction(self._saveAction)
+            # Disable the menus
             self._fileMenu.setEnabled(False)
-
-            self._viewMenu.removeAction(self._returnAction)
-            self._viewMenu.removeAction(self._prevAction)
-            self._viewMenu.removeAction(self._nextAction)
-            self._viewMenu.removeAction(self._zoomAction)
-            self._viewMenu.removeAction(self._resetZoomAction)
             self._viewMenu.setEnabled(False)
-
-            self._imageMenu.removeAction(self._cropAction)
-            self._imageMenu.removeAction(self._sharpenAction)
-            self._imageMenu.removeAction(self._blurAction)
-            self._imageMenu.removeAction(self._contourAction)
-            self._imageMenu.removeAction(self._detailAction)
-            self._imageMenu.removeAction(self._edgeEnhanceAction)
-            self._imageMenu.removeAction(self._embossAction)
-            self._imageMenu.removeAction(self._findEdgesAction)
-            self._imageMenu.removeAction(self._smoothAction)
-            self._imageMenu.removeAction(self._unsharpMaskAction)
-            self._imageMenu.removeAction(self._autoContrastAction)
-            self._imageMenu.removeAction(self._undoAction)
             self._imageMenu.setEnabled(False)
 
     def _GetImagePathList(self) -> list[Path]:
