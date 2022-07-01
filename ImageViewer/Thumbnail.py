@@ -353,14 +353,19 @@ class Thumbnail(QWidget):
 
             # Try to cancel the future
             if not self._loadFuture.cancel():
-                # If the future could not be cancelled, log this
-                logging.log(logging.DEBUG, f'Future {self.ImagePath.name} running and cannot be cancelled')
+                # Wait for the thread to finish in another thread (is this getting too much...?)
+                self._executor.submit(self._waitForCancellation)
 
-                # Wait 1 second for the thread to complete
-                self._loadFuture.result(1)
+    def _waitForCancellation(self) -> None:
+        if self._loadFuture is not None:
+            # If the future could not be cancelled, log this
+            logging.log(logging.DEBUG, f'Future {self.ImagePath.name} running and cannot be cancelled')
 
-                # Log that it is now complete
-                logging.log(logging.DEBUG, f'Future {self.ImagePath.name} now complete')
+            # Wait 1 second for the thread to complete
+            self._loadFuture.result(1)
+
+            # Log that it is now complete
+            logging.log(logging.DEBUG, f'Future {self.ImagePath.name} now complete')
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         super().mousePressEvent(a0)
