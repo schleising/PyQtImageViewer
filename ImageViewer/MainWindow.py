@@ -370,6 +370,9 @@ class MainWindow(QMainWindow):
             # Otherwise align just to the top
             self._grid.setAlignment(Qt.AlignTop)
 
+        # Set the widow title to the folder name
+        self.setWindowTitle(self._currentPath.stem)
+
         # Create a timer added to the end of the event queue to reset the scroll
         # bar and highlight the last thumbnail.  This cannot be done here as the 
         # view has not been painted and the thumbnail cannot yet be safely repainted
@@ -467,6 +470,9 @@ class MainWindow(QMainWindow):
 
         # Enable the previous and next image actions
         self._updateMenu()
+
+        # Set the window title to folder - filename
+        self.setWindowTitle(f'{self._currentPath.stem} - {imagePath.stem}')
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         # Check that this is a key press
@@ -584,6 +590,9 @@ class MainWindow(QMainWindow):
 
         # Disable the previous and next image actions
         self._updateMenu()
+
+        # Set the window title back to the folder name
+        self.setWindowTitle(self._currentPath.stem)
 
     def _nextImage(self) -> None:
         # Increment the current image index
