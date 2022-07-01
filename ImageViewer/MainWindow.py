@@ -384,8 +384,14 @@ class MainWindow(QMainWindow):
 
         # Get the widget is actually a thumbnail
         if isinstance(thumbnail, Thumbnail):
+            # Remove the current highlight
+            self._thumbnailList[self._currentHighlightedThumbnail].highlighted = False
+            
             # Get the item number to set the highlight
             self._currentHighlightedThumbnail = thumbnail.ItemNumber
+
+            # Highlight the new thumbnail
+            self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
 
             # if this widget represents a folder, update the path and load the new set of thumbnails
             self.OpenItem(thumbnail.ImagePath)
@@ -407,6 +413,7 @@ class MainWindow(QMainWindow):
             # Clear and recreate the grid for this folder
             self.SetLabels()
         else:
+            # Show the image
             self.ShowImage(path)
 
     def FileOpened(self, imagePath: Path) -> None:
@@ -585,7 +592,7 @@ class MainWindow(QMainWindow):
         # Check bounds
         if self._currentImageIndex >= len(self._imageList):
             self._currentImageIndex = 0
-        
+
         # Load the new image
         self._MaximiseImage(self._imageList[self._currentImageIndex])
 
