@@ -322,8 +322,16 @@ class MainWindow(QMainWindow):
             # Removes the item
             item = self._grid.takeAt(0)
 
-            # Set the parent to None to ensure ot gets hidden
-            item.widget().setParent(None) # type: ignore
+            # Get the widget from the layout item
+            widget = item.widget()
+
+            # Check the widget is indeed a thumbnail
+            if isinstance(widget, Thumbnail):
+                # Cancel the image load
+                widget.CancelLoad()
+
+            # Set the parent to None to ensure it gets hidden
+            widget.setParent(None) # type: ignore
 
         # Clear down the thumbnail list
         self._thumbnailList.clear()
