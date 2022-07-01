@@ -1,5 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 from pathlib import Path
+from time import sleep
 from typing import Optional
 import logging
 
@@ -128,6 +129,12 @@ class Thumbnail(QWidget):
         # The actual image
         self._qtImage: Optional[ImageQt] = None
         
+        # A future object for use in cancelling the load request if it is in progress
+        self._loadFuture: Optional[Future] = None
+
+        # A boolean to say whether the load thread has been cancelled
+        self._loadCancelled = False
+
         # Set the default image, withe loading or a folder
         self.SetDefaultImage()
 
@@ -253,68 +260,112 @@ class Thumbnail(QWidget):
         self._thumbnailText.setText(self._ShortenLabelText(self.ImagePath.stem))
 
     def _LoadImage(self):
-        # Load the image in a new thread
-        self._executor.submit(self._LoadImageInThread)
+        # Load the image in a new thread, getting the future for use in checking for completion/cancelling
+        self._loadFuture = self._executor.submit(self._LoadImageInThread)
 
     def _LoadImageInThread(self) -> None:
-        # Log that the image load has started
-        logging.log(logging.DEBUG, f'Loading Image {self.ImagePath}')
+        # Check that the load has not yet been cancelled
+        if not self._loadCancelled:
+            # Log that the image load has started
+            logging.log(logging.DEBUG, f'Loading Image {self.ImagePath}')
 
-        # Use Pillow to open the image and convert to a QPixmap
-        pilImage = Image.open(self.ImagePath)
+            # Use Pillow to open the image and convert to a QPixmap
+            pilImage = Image.open(self.ImagePath)
 
-        # Log that PIL the image load has completed
-        logging.log(logging.DEBUG, f'PIL Loaded {self.ImagePath}')
+            # Log that PIL the image load has completed
+            logging.log(logging.DEBUG, f'PIL Loaded {self.ImagePath}')
 
-        # Convert the PIL image to a QImage
-        self._qtImage = ImageQt(pilImage)
+            # Convert the PIL image to a QImage
+            self._qtImage = ImageQt(pilImage)
 
-        # Log that the QImage conversion has completed
-        logging.log(logging.DEBUG, f'Qt Converted {self.ImagePath}')
+            # Log that the QImage conversion has completed
+            logging.log(logging.DEBUG, f'Qt Converted {self.ImagePath}')
 
-        # Resize the image
-        self.ResizeImage()
+        # Check that the load has not yet been cancelled
+        if not self._loadCancelled:
+            # Resize the image
+            self.ResizeImage()
 
     def ResizeImage(self) -> None:
         pixmap = QPixmap()
 
-        # Set the minimum size of this widget
-        self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
+        # Check that the load has not yet been cancelled
+        if not self._loadCancelled:
+            # Set the minimum size of this widget
+            self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
 
-        # Log that the image has been loaded and we are ready to resize it to fit the label
-        logging.log(logging.DEBUG, f'Resizing Image {self.ImagePath}')
+            # Log that the image has been loaded and we are ready to resize it to fit the label
+            logging.log(logging.DEBUG, f'Resizing Image {self.ImagePath}')
 
-        # Check the Qt Image has been set
-        if self._qtImage:
-            # Convert the Qt Image into a QPixmap
-            pixmap.convertFromImage(self._qtImage)
-        elif self._folderImage:
-            # Convert the Qt Image into a QPixmap
-            pixmap.convertFromImage(self._folderImage)
+        # Check that the load has not yet been cancelled
+        if not self._loadCancelled:
+            # Check the Qt Image has been set
+            if self._qtImage:
+                # Convert the Qt Image into a QPixmap
+                pixmap.convertFromImage(self._qtImage)
+            elif self._folderImage:
+                # Convert the Qt Image into a QPixmap
+                pixmap.convertFromImage(self._folderImage)
 
-        # Scale the image to the thumbnail size
-        self._currentImage = pixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
+        # Check that the load has not yet been cancelled
+        if not self._loadCancelled:
+            # Scale the image to the thumbnail size
+            self._currentImage = pixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
 
-        if self._currentImage:
+        # Check that the load has not yet been cancelled
+        if not self._loadCancelled:
+            # Set the filename text
+            self._thumbnailText.setText(self._ShortenLabelText(self.ImagePath.stem))
+
+        if self._currentImage and not self._loadCancelled:
             # Set the image to be the label pixmap
             self._thumbnailImage.setPixmap(self._currentImage)
-
-            # Emit signal to indicate that the image has loaded and the opacity can be reset to 100%
-            self.loaded.emit()
 
             # Log that the load is complete
             logging.log(logging.DEBUG, f'Loaded Image {self.ImagePath}')
 
-        # Set the filename text
-        self._thumbnailText.setText(self._ShortenLabelText(self.ImagePath.stem))
+            # Emit signal to indicate that the image has loaded and the opacity can be reset to 100%
+            self.loaded.emit()
 
     def ImageLoaded(self) -> None:
-        # The image has been loaded so we can now reset the opacity to 100%
-        opacityEffect = QGraphicsOpacityEffect(self)
-        opacityEffect.setOpacity(1.0)
+        # Check that the future is not already cancelled or complete
+        if self._loadFuture is not None:
+            if not self._loadFuture.done():
+                # Wait 1 second for the thread to complete
+                self._loadFuture.result(1)
 
-        # Set the new graohics effect on the widget
-        self.setGraphicsEffect(opacityEffect)
+                # Set the future back to None
+                self._loadFuture = None
+
+            # The image has been loaded so we can now reset the opacity to 100%
+            opacityEffect = QGraphicsOpacityEffect(self)
+            opacityEffect.setOpacity(1.0)
+
+            # Set the new graohics effect on the widget
+            self.setGraphicsEffect(opacityEffect)
+
+    def CancelLoad(self) -> None:
+        # Show that the load has been cancelled
+        self._loadCancelled = True
+
+        # If the future is not already complete or cancelled
+        if self._loadFuture is not None:
+
+            # Try to cancel the future
+            if not self._loadFuture.cancel():
+                # Wait for the thread to finish in another thread (is this getting too much...?)
+                self._executor.submit(self._waitForCancellation)
+
+    def _waitForCancellation(self) -> None:
+        if self._loadFuture is not None:
+            # If the future could not be cancelled, log this
+            logging.log(logging.DEBUG, f'Future {self.ImagePath.name} running and cannot be cancelled')
+
+            # Wait 1 second for the thread to complete
+            self._loadFuture.result(1)
+
+            # Log that it is now complete
+            logging.log(logging.DEBUG, f'Future {self.ImagePath.name} now complete')
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         super().mousePressEvent(a0)

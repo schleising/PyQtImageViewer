@@ -69,5 +69,3 @@ if __name__ == '__main__':
 
     # Exit the application
     sys.exit(exitCode)
-
-#TODO: Better image transitions
