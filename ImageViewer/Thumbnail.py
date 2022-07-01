@@ -11,7 +11,6 @@ from PySide6.QtGui import (
     QPainter,
     QFontMetrics,
     QPalette,
-    QBitmap,
 )
 from PySide6.QtCore import Qt, Signal
 
@@ -99,7 +98,7 @@ class Thumbnail(QWidget):
     # Signal emitted when the image is fully loaded to set opacity back to 100%
     loaded = Signal()
 
-    def __init__(self, imagePath: Path, parent: Optional[QWidget]=None):
+    def __init__(self, imagePath: Path, itemNumber: int, parent: Optional[QWidget]=None):
         super().__init__(parent=parent)
 
         # Get labels for the image and filename and a layout to contain them
@@ -134,6 +133,9 @@ class Thumbnail(QWidget):
 
         # Indicate whether this thumbnail is highlighted
         self._highlighted = False
+
+        # The number of this thumbnail in the browser view
+        self.ItemNumber = itemNumber
 
     @classmethod
     def InitialiseDefaultImage(cls, thumbnailSize: int) -> None:

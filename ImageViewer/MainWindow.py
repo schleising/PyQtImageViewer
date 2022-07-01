@@ -1,4 +1,4 @@
-
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 import logging
@@ -11,6 +11,12 @@ from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
 from ImageViewer.FileTypes import supportedExtensions
 from ImageViewer.Constants import START_X, START_Y, START_WIDTH, START_HEIGHT, MIN_WIDTH
+
+@dataclass
+class FolderInfo:
+    folderPath: Path
+    highlightedItem: int
+    scrollAmount: int
 
 class MainWindow(QMainWindow):
     # Create a signal for the file open event 
@@ -96,6 +102,9 @@ class MainWindow(QMainWindow):
 
         # Store up which thumbnail is highlighted
         self._currentHighlightedThumbnail = 0
+
+        # A dictionary containing the folder info for use if returning to that folder
+        self._folderInfoDict: dict[Path, FolderInfo] = {}
 
         # Show the window
         self.show()
@@ -340,7 +349,7 @@ class MainWindow(QMainWindow):
         # Loop through the folders and images, creating a thumbnail for each
         for count, imagePath in enumerate(fileList):
             # Create the thumbnail, will only have the default or folder image for now
-            thumbnail = Thumbnail(imagePath)
+            thumbnail = Thumbnail(imagePath, count)
 
             # Work out the grid row and column
             row = count // self._thumbnailsPerRow
@@ -362,12 +371,13 @@ class MainWindow(QMainWindow):
             # Otherwise align just to the top
             self._grid.setAlignment(Qt.AlignTop)
 
-        # Scroll the view back to the top
-        self._scroll.verticalScrollBar().setValue(0)
-
-        # Highlight the first cell
-        self._currentHighlightedThumbnail = 0
-        self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
+        # Create a timer added to the end of the event queue to reset the scroll
+        # bar and highlight the last thumbnail.  This cannot be done here as the 
+        # view has not been painted and the thumbnail cannot yet be safely repainted
+        # This fixes
+        # 1) The view scroll position sometimes not being reset properly
+        # 2) Occaisional crashes as we try to repaint a non-existent widget
+        QTimer.singleShot(0, self.resetScroll)
 
     def thumbnailClicked(self) -> None:
         # Get the widget that was clicked
@@ -375,11 +385,23 @@ class MainWindow(QMainWindow):
 
         # Get the widget is actually a thumbnail
         if isinstance(thumbnail, Thumbnail):
+            # Get the item number to set the highlight
+            self._currentHighlightedThumbnail = thumbnail.ItemNumber
+
             # if this widget represents a folder, update the path and load the new set of thumbnails
             self.OpenItem(thumbnail.ImagePath)
 
     def OpenItem(self, path: Path) -> None:
         if path.is_dir():
+            # Save the current folder info
+            folderInfo = FolderInfo(self._currentPath, self._currentHighlightedThumbnail, self._scroll.verticalScrollBar().value())
+            self._folderInfoDict[self._currentPath] = folderInfo
+
+            logging.log(logging.DEBUG, 'Saved Folder Info')
+            logging.log(logging.DEBUG, self._currentPath)
+            logging.log(logging.DEBUG, self._folderInfoDict[self._currentPath])
+            logging.log(logging.DEBUG, '-----------------')
+
             # Update the path
             self._currentPath = path
 
@@ -451,11 +473,11 @@ class MainWindow(QMainWindow):
                 # Return True to indicate that the event is accepted
                 return True
             else:
-                # Should never reach here
-                return False
+                # Should never reach here, call the super class version of the function
+                return super().eventFilter(watched, event)
         else:
-            # We haven't dealt with the event so return False
-            return False
+            # We haven't dealt with the event so call the super class version of the function
+            return super().eventFilter(watched, event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         match event.key():
@@ -601,3 +623,27 @@ class MainWindow(QMainWindow):
                 self.showNormal()
             else:
                 self.showFullScreen()
+
+    def resetScroll(self) -> None:
+        if self._currentPath in self._folderInfoDict:
+            # Scroll the view back to where it was
+            self._scroll.verticalScrollBar().setValue(self._folderInfoDict[self._currentPath].scrollAmount)
+
+            # Highlight the old highlighted thumbnail
+            self._currentHighlightedThumbnail = self._folderInfoDict[self._currentPath].highlightedItem
+
+            logging.log(logging.DEBUG, 'Recovered Folder Info')
+            logging.log(logging.DEBUG, self._currentPath)
+            logging.log(logging.DEBUG, self._folderInfoDict[self._currentPath])
+            logging.log(logging.DEBUG, f'Scroll Value: {self._scroll.verticalScrollBar().value()}')
+            logging.log(logging.DEBUG, f'Scroll Limits: {self._scroll.verticalScrollBar().maximum()}')
+            logging.log(logging.DEBUG, '-----------------')
+        else:
+            # Scroll the view to the top
+            self._scroll.verticalScrollBar().setValue(0)
+
+            # Highlight the first thumbnail
+            self._currentHighlightedThumbnail = 0
+
+        # Highlight the selected thumbnail        
+        self._thumbnailList[self._currentHighlightedThumbnail].highlighted = True
