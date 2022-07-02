@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from PIL import Image
 from PIL.ImageQt import ImageQt
@@ -11,7 +11,6 @@ from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 import ImageViewer.ImageTools as ImageTools
-from ImageViewer.ImageTools import undo
 
 class FullImage(QGraphicsView):
     def __init__(self, parent=None):
@@ -176,6 +175,25 @@ class FullImage(QGraphicsView):
 
             # Save the image
             self._pilImage.save(filename)
+
+    @staticmethod
+    def undo(func: Callable) -> Callable:
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            if self._pilImage is not None:
+                # Add the current image to the undo buffer
+                self._undoBuffer.append(self._pilImage)
+
+                # Call the manipulation function
+                func(self, args, kwargs)
+
+                # Update the pixmap
+                self._updatePixmap()
+
+                # Indicate that the image can be saved
+                self._imageCanBeSaved = True
+
+        return wrapper
 
     @undo
     def CropImage(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
