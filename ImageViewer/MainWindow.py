@@ -151,15 +151,15 @@ class MainWindow(QMainWindow):
 
         # Add a zoom to rect action
         self._zoomAction = QAction('Zoom to Rect', self)
-        self._zoomAction.setShortcut(Qt.Key.Key_Z)
+        self._zoomAction.setShortcut(QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z))
 
         # Add a reset zoom action
         self._resetZoomAction = QAction('Reset Zoom', self)
-        self._resetZoomAction.setShortcut(Qt.Key.Key_R)
+        self._resetZoomAction.setShortcut(QKeySequence(Qt.Modifier.META | Qt.Key.Key_R))
 
         # Add a crop to rect action
         self._cropAction = QAction('Crop to Rect', self)
-        self._cropAction.setShortcut(Qt.Key.Key_C)
+        self._cropAction.setShortcut(QKeySequence(Qt.Modifier.META | Qt.Key.Key_C))
 
         # Add an info action
         self._infoAction = QAction('Image Information', self)
