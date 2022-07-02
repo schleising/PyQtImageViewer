@@ -221,6 +221,10 @@ class MainWindow(QMainWindow):
         self._decreaseBrightnessAction = QAction('Decrease Brightness', self)
         self._decreaseBrightnessAction.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Left))
 
+        # Add a Black and White action
+        self._blackAndWhiteAction = QAction('Black and White', self)
+        self._blackAndWhiteAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_W))
+
         # Add an Undo action
         self._undoAction = QAction('Undo', self)
         self._undoAction.setShortcut(QKeySequence.Undo)
@@ -292,6 +296,9 @@ class MainWindow(QMainWindow):
             # Connect to the decrease brightness function of the full sized image
             self._decreaseBrightnessAction.triggered.connect(self._fullSizeImage.DecreaseBrightness) # type: ignore
 
+            # Connect to the decrease brightness function of the full sized image
+            self._blackAndWhiteAction.triggered.connect(self._fullSizeImage.BlackAndWhite) # type: ignore
+
             # Connect to the undo function of the full sized image
             self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
@@ -316,6 +323,7 @@ class MainWindow(QMainWindow):
             self._imageMenu.addAction(self._decreaseContrastAction)
             self._imageMenu.addAction(self._increaseBrightnessAction)
             self._imageMenu.addAction(self._decreaseBrightnessAction)
+            self._imageMenu.addAction(self._blackAndWhiteAction)
             self._imageMenu.addSeparator()
             self._imageMenu.addAction(self._sharpenAction)
             self._imageMenu.addAction(self._blurAction)
