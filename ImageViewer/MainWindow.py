@@ -161,6 +161,10 @@ class MainWindow(QMainWindow):
         self._cropAction = QAction('Crop to Rect', self)
         self._cropAction.setShortcut(Qt.Key.Key_C)
 
+        # Add an info action
+        self._infoAction = QAction('Image Information', self)
+        self._infoAction.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_I))
+
         # Add a Sharpen action
         self._sharpenAction = QAction('Sharpen', self)
         self._sharpenAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S))
@@ -252,6 +256,9 @@ class MainWindow(QMainWindow):
             # Connect to the crop function of the full sized image
             self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
+            # Connect to the info function of the full sized image
+            self._infoAction.triggered.connect(self._fullSizeImage.ImageInfo) # type: ignore
+
             # Connect to the sharped function of the full sized image
             self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
 
@@ -318,6 +325,8 @@ class MainWindow(QMainWindow):
             self._viewMenu.addSeparator()
             self._viewMenu.addAction(self._zoomAction)
             self._viewMenu.addAction(self._resetZoomAction)
+            self._viewMenu.addSeparator()
+            self._viewMenu.addAction(self._infoAction)
 
             self._imageMenu.addAction(self._cropAction)
             self._imageMenu.addSeparator()
