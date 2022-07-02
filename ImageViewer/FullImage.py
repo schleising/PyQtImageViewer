@@ -303,6 +303,11 @@ class FullImage(QGraphicsView):
         if self._pilImage is not None:
             self._pilImage = ImageTools.Brightness(self._pilImage, kwargs.get('factor', 1.0))
 
+    @undo
+    def BlackAndWhite(self, args: tuple[Any], kwargs: dict[str, float]) -> None:
+        if self._pilImage is not None:
+            self._pilImage = ImageTools.Colour(self._pilImage, 0.0)
+
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
 
