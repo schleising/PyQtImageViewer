@@ -60,6 +60,10 @@ def UnsharpMask(inputImage: Image.Image) -> Image.Image:
     # Sharpen the image using an unsharp mask
     return _ManipulateImage(inputImage, ImageFilter.UnsharpMask)
 
+def AutoContrast(inputImage: Image.Image) -> Image.Image:
+    # Return the autocongtrasted image
+    return ImageOps.autocontrast(inputImage)
+
 def Colour(inputImage: Image.Image, factor: float) -> Image.Image:
     # Create the enhancement tool
     enhance = ImageEnhance.Color(inputImage)
@@ -80,7 +84,3 @@ def Brightness(inputImage: Image.Image, factor: float) -> Image.Image:
 
     # Manipulate the image
     return enhance.enhance(factor)
-
-def AutoContrast(inputImage: Image.Image) -> Image.Image:
-    # Return the autocongtrasted image
-    return ImageOps.autocontrast(inputImage)

@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
         self._zoomAction = QAction('Zoom to Rect', self)
         self._zoomAction.setShortcut(Qt.Key.Key_Z)
 
-        # Add a zoom to rect action
+        # Add a reset zoom action
         self._resetZoomAction = QAction('Reset Zoom', self)
         self._resetZoomAction.setShortcut(Qt.Key.Key_R)
 
@@ -170,11 +170,11 @@ class MainWindow(QMainWindow):
         self._detailAction = QAction('Detail', self)
         self._detailAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D))
 
-        # Add a Edge Enhance action
+        # Add an Edge Enhance action
         self._edgeEnhanceAction = QAction('Edge Enhance', self)
         self._edgeEnhanceAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E))
 
-        # Add a Emboss action
+        # Add an Emboss action
         self._embossAction = QAction('Emboss', self)
         self._embossAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M))
 
@@ -186,13 +186,37 @@ class MainWindow(QMainWindow):
         self._smoothAction = QAction('Smooth', self)
         self._smoothAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O))
 
-        # Add a Unsharp Mask action
+        # Add an Unsharp Mask action
         self._unsharpMaskAction = QAction('Unsharp Mask', self)
         self._unsharpMaskAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U))
 
-        # Add a Auto Contrast action
+        # Add an Auto Contrast action
         self._autoContrastAction = QAction('Auto Contrast', self)
         self._autoContrastAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A))
+
+        # Add an Increase Colour action
+        self._increaseColourAction = QAction('Increase Colour', self)
+        self._increaseColourAction.setShortcut(QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right))
+
+        # Add a Decrease Colour action
+        self._decreaseColourAction = QAction('Decrease Colour', self)
+        self._decreaseColourAction.setShortcut(QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left))
+
+        # Add an Increase Contrast action
+        self._increaseContrastAction = QAction('Increase Contrast', self)
+        self._increaseContrastAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Right))
+
+        # Add a Decrease Contrast action
+        self._decreaseContrastAction = QAction('Decrease Contrast', self)
+        self._decreaseContrastAction.setShortcut(QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Left))
+
+        # Add an Increase Brightness action
+        self._increaseBrightnessAction = QAction('Increase Brightness', self)
+        self._increaseBrightnessAction.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Right))
+
+        # Add a Decrease Brightness action
+        self._decreaseBrightnessAction = QAction('Decrease Brightness', self)
+        self._decreaseBrightnessAction.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Left))
 
         # Add an Undo action
         self._undoAction = QAction('Undo', self)
@@ -219,35 +243,53 @@ class MainWindow(QMainWindow):
                 # Connect to the crop function of the full sized image
                 self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the sharped function of the full sized image
                 self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the blur function of the full sized image
                 self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the contour function of the full sized image
                 self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the detail function of the full sized image
                 self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the edge enhance function of the full sized image
                 self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the emboss function of the full sized image
                 self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the find edges function of the full sized image
                 self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the smooth function of the full sized image
                 self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the unharp mask function of the full sized image
                 self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
 
-                # Connect to the crop function of the full sized image
+                # Connect to the auto contrast function of the full sized image
                 self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
+
+                # Connect to the increase colour function of the full sized image
+                self._increaseColourAction.triggered.connect(self._fullSizeImage.IncreaseColour) # type: ignore
+
+                # Connect to the decrease colour function of the full sized image
+                self._decreaseColourAction.triggered.connect(self._fullSizeImage.DecreaseColour) # type: ignore
+
+                # Connect to the increase contrast function of the full sized image
+                self._increaseContrastAction.triggered.connect(self._fullSizeImage.IncreaseContrast) # type: ignore
+
+                # Connect to the decrease contrast function of the full sized image
+                self._decreaseContrastAction.triggered.connect(self._fullSizeImage.DecreaseContrast) # type: ignore
+
+                # Connect to the increase brightness function of the full sized image
+                self._increaseBrightnessAction.triggered.connect(self._fullSizeImage.IncreaseBrightness) # type: ignore
+
+                # Connect to the decrease brightness function of the full sized image
+                self._decreaseBrightnessAction.triggered.connect(self._fullSizeImage.DecreaseBrightness) # type: ignore
 
                 # Connect to the undo function of the full sized image
                 self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
@@ -267,6 +309,13 @@ class MainWindow(QMainWindow):
 
                 self._imageMenu.addAction(self._cropAction)
                 self._imageMenu.addSeparator()
+                self._imageMenu.addAction(self._increaseColourAction)
+                self._imageMenu.addAction(self._decreaseColourAction)
+                self._imageMenu.addAction(self._increaseContrastAction)
+                self._imageMenu.addAction(self._decreaseContrastAction)
+                self._imageMenu.addAction(self._increaseBrightnessAction)
+                self._imageMenu.addAction(self._decreaseBrightnessAction)
+                self._imageMenu.addSeparator()
                 self._imageMenu.addAction(self._sharpenAction)
                 self._imageMenu.addAction(self._blurAction)
                 self._imageMenu.addAction(self._contourAction)
@@ -277,7 +326,7 @@ class MainWindow(QMainWindow):
                 self._imageMenu.addAction(self._smoothAction)
                 self._imageMenu.addAction(self._unsharpMaskAction)
                 self._imageMenu.addAction(self._autoContrastAction)
-                self._imageMenu.addSeparator()            
+                self._imageMenu.addSeparator()
                 self._imageMenu.addAction(self._undoAction)
 
                 # Indicate that the actions have been added

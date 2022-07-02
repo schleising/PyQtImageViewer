@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from PIL import Image
 from PIL.ImageQt import ImageQt
@@ -178,7 +178,7 @@ class FullImage(QGraphicsView):
             self._pilImage.save(filename)
 
     @undo
-    def CropImage(self, args, kwargs) -> None:
+    def CropImage(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._graphicsRectItem is not None and self._pilImage is not None:
             # Get the rect to be cropped
             rect = self._graphicsRectItem.rect().toRect()
@@ -187,64 +187,103 @@ class FullImage(QGraphicsView):
             self._pilImage = self._pilImage.crop((rect.left(), rect.top(), rect.right(), rect.bottom()))
 
     @undo
-    def Sharpen(self, args, kwargs) -> None:
+    def Sharpen(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Sharpen(self._pilImage)
 
     @undo
-    def Blur(self, args, kwargs) -> None:
+    def Blur(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Blur(self._pilImage)
 
     @undo
-    def Contour(self, args, kwargs) -> None:
+    def Contour(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Contour(self._pilImage)
 
     @undo
-    def Detail(self, args, kwargs) -> None:
+    def Detail(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Detail(self._pilImage)
 
     @undo
-    def EdgeEnhance(self, args, kwargs) -> None:
+    def EdgeEnhance(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.EdgeEnhance(self._pilImage)
 
     @undo
-    def Emboss(self, args, kwargs) -> None:
+    def Emboss(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Emboss(self._pilImage)
 
     @undo
-    def FindEdges(self, args, kwargs) -> None:
+    def FindEdges(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.FindEdges(self._pilImage)
 
     @undo
-    def Smooth(self, args, kwargs) -> None:
+    def Smooth(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Smooth(self._pilImage)
 
     @undo
-    def UnsharpMask(self, args, kwargs) -> None:
+    def UnsharpMask(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.UnsharpMask(self._pilImage)
 
     @undo
-    def AutoContrast(self, args, kwargs) -> None:
+    def AutoContrast(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
         if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.AutoContrast(self._pilImage)
+
+    def IncreaseColour(self) -> None:
+        # Increase the colour in response to a menu selection
+        self.Colour(factor = 1.1)
+
+    def DecreaseColour(self) -> None:
+        # Decrease the colour in response to a menu selection
+        self.Colour(factor = 0.9)
+
+    @undo
+    def Colour(self, args: tuple[Any], kwargs: dict[str, float]) -> None:
+        if self._pilImage is not None:
+            self._pilImage = ImageTools.Colour(self._pilImage, kwargs.get('factor', 1.0))
+
+    def IncreaseContrast(self) -> None:
+        # Increase the contrast in response to a menu selection
+        self.Contrast(factor = 1.1)
+
+    def DecreaseContrast(self) -> None:
+        # Decrease the contrast in response to a menu selection
+        self.Contrast(factor = 0.9)
+
+    @undo
+    def Contrast(self, args: tuple[Any], kwargs: dict[str, float]) -> None:
+        if self._pilImage is not None:
+            self._pilImage = ImageTools.Contrast(self._pilImage, kwargs.get('factor', 1.0))
+
+    def IncreaseBrightness(self) -> None:
+        # Increase the brightness in response to a menu selection
+        self.Brightness(factor = 1.1)
+
+    def DecreaseBrightness(self) -> None:
+        # Decrease the brightness in response to a menu selection
+        self.Brightness(factor = 0.9)
+
+    @undo
+    def Brightness(self, args: tuple[Any], kwargs: dict[str, float]) -> None:
+        if self._pilImage is not None:
+            self._pilImage = ImageTools.Brightness(self._pilImage, kwargs.get('factor', 1.0))
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
