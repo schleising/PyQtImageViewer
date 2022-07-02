@@ -3,23 +3,6 @@ from PIL import Image, ImageFilter, ImageEnhance
 from PIL.ImageFilter import Filter
 from PIL import ImageOps
 
-def undo(func: Callable) -> Callable:
-    def wrapper(self, *args, **kwargs):
-        if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
-            # Call the manipulation function
-            func(self, args, kwargs)
-
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    return wrapper
-
 def _ManipulateImage(inputImage: Image.Image, filter: Filter | Callable[[], Filter]) -> Image.Image:
     # Manipulate the image
     return inputImage.filter(filter)
