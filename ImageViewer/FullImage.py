@@ -14,7 +14,7 @@ import ImageViewer.ImageTools as ImageTools
 from ImageViewer.ImageTools import undo
 
 class FullImage(QGraphicsView):
-    def __init__(self, imagePath: Path, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent=parent)
 
         # Ensure transformations happen under the mouse position
@@ -40,9 +40,6 @@ class FullImage(QGraphicsView):
 
         # Add the scene to the view
         self.setScene(self._scene)
-
-        # Initialise the view
-        self.InitialiseView(imagePath)
 
     def InitialiseView(self, imagePath:Path) -> None:
         # Set the image path
