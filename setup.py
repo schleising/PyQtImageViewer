@@ -50,5 +50,5 @@ setup(
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},
     setup_requires=['py2app'],
-    version='0.0.0',
+    version='1.1.0',
 )
