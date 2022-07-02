@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 import ImageViewer.ImageTools as ImageTools
+from ImageViewer.ImageTools import undo
 
 class FullImage(QGraphicsView):
     def __init__(self, imagePath: Path, parent=None):
@@ -155,23 +156,6 @@ class FullImage(QGraphicsView):
             # Indicate that we are not zoomed
             self._zoomed = False
 
-    def CropImage(self) -> None:
-        if self._graphicsRectItem is not None and self._pilImage is not None:
-            # Add the current QImage to the undo buffer
-            self._undoBuffer.append(self._pilImage.copy())
-
-            # Get the rect to be cropped
-            rect = self._graphicsRectItem.rect().toRect()
-
-            # Copy the cropped area out of the QImage
-            self._pilImage = self._pilImage.crop((rect.left(), rect.top(), rect.right(), rect.bottom()))
-
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
     def UndoLastChange(self) -> None:
         # If there are items in the buffer
         if self._undoBuffer:
@@ -193,145 +177,74 @@ class FullImage(QGraphicsView):
             # Save the image
             self._pilImage.save(filename)
 
-    def Sharpen(self) -> None:
-        if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
+    @undo
+    def CropImage(self, args, kwargs) -> None:
+        if self._graphicsRectItem is not None and self._pilImage is not None:
+            # Get the rect to be cropped
+            rect = self._graphicsRectItem.rect().toRect()
 
+            # Copy the cropped area out of the QImage
+            self._pilImage = self._pilImage.crop((rect.left(), rect.top(), rect.right(), rect.bottom()))
+
+    @undo
+    def Sharpen(self, args, kwargs) -> None:
+        if self._pilImage is not None:
             # Update the image with the new version
             self._pilImage = ImageTools.Sharpen(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def Blur(self) -> None:
+    @undo
+    def Blur(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.Blur(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def Contour(self) -> None:
+    @undo
+    def Contour(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.Contour(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def Detail(self) -> None:
+    @undo
+    def Detail(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.Detail(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def EdgeEnhance(self) -> None:
+    @undo
+    def EdgeEnhance(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.EdgeEnhance(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def Emboss(self) -> None:
+    @undo
+    def Emboss(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.Emboss(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def FindEdges(self) -> None:
+    @undo
+    def FindEdges(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.FindEdges(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def Smooth(self) -> None:
+    @undo
+    def Smooth(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.Smooth(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def UnsharpMask(self) -> None:
+    @undo
+    def UnsharpMask(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.UnsharpMask(self._pilImage)
 
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
-
-    def AutoContrast(self) -> None:
+    @undo
+    def AutoContrast(self, args, kwargs) -> None:
         if self._pilImage is not None:
-            # Add the current image to the undo buffer
-            self._undoBuffer.append(self._pilImage)
-
             # Update the image with the new version
             self._pilImage = ImageTools.AutoContrast(self._pilImage)
-
-            # Update the pixmap
-            self._updatePixmap()
-
-            # Indicate that the image can be saved
-            self._imageCanBeSaved = True
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
