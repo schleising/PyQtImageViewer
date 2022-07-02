@@ -5,16 +5,12 @@ from typing import Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsItem
-from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor, QImage
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, QObject
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
+from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 import ImageViewer.ImageTools as ImageTools
-
-class AnimatableGraphicsPixmapItem(QGraphicsPixmapItem, QObject):
-    def __init__(self, pixmap: QPixmap | QImage | str, parent: Optional[QGraphicsItem] = None):
-        super().__init__(pixmap, parent)
 
 class FullImage(QGraphicsView):
     def __init__(self, imagePath: Path, parent=None):
@@ -36,7 +32,7 @@ class FullImage(QGraphicsView):
         self._scene = QGraphicsScene()
 
         # A pixmap graphics item for the image
-        self._pixmapGraphicsItem: Optional[AnimatableGraphicsPixmapItem] = None
+        self._pixmapGraphicsItem: Optional[QGraphicsPixmapItem] = None
 
         # A graphics rect item for the selection rectangle
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
@@ -93,7 +89,7 @@ class FullImage(QGraphicsView):
             self._pixmapGraphicsItem = None
 
         # Add the pixmap to the scene and return the QGraphicsPixmapItem
-        self._pixmapGraphicsItem = AnimatableGraphicsPixmapItem(self._pixmap)
+        self._pixmapGraphicsItem = QGraphicsPixmapItem(self._pixmap)
         self._scene.addItem(self._pixmapGraphicsItem)
 
         self._scene.setSceneRect(self._pixmapGraphicsItem.boundingRect())
@@ -147,7 +143,7 @@ class FullImage(QGraphicsView):
                 self._scene.removeItem(self._pixmapGraphicsItem)
 
             # Add the new pixmap to the scene
-            self._pixmapGraphicsItem = AnimatableGraphicsPixmapItem(self._pixmap)
+            self._pixmapGraphicsItem = QGraphicsPixmapItem(self._pixmap)
             self._scene.addItem(self._pixmapGraphicsItem)
 
             # Fit the new pixmap in the view
