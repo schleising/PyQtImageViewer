@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-from platform import python_branch
 import sys
 import logging
 from typing import Optional
