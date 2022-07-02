@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
 from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
 
+from ImageViewer.ImageInfoDialog import ImageInfoDialog
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 import ImageViewer.ImageTools as ImageTools
 
@@ -307,6 +308,23 @@ class FullImage(QGraphicsView):
     def BlackAndWhite(self, args: tuple[Any], kwargs: dict[str, float]) -> None:
         if self._pilImage is not None:
             self._pilImage = ImageTools.Colour(self._pilImage, 0.0)
+
+    def ImageInfo(self) -> None:
+        if self._pilImage is not None:
+            # Create a dictionary containing the image information
+            info: dict[str, str] = {
+                'Format': self._pilImage.format if self._pilImage.format is not None else '',
+                'Format Description': self._pilImage.format_description if self._pilImage.format_description is not None else '',
+                'Width': str(self._pilImage.width),
+                'Height': str(self._pilImage.height),
+                'Mode': self._pilImage.mode,
+            }
+
+            # Create a dialog to show the information
+            dialog = ImageInfoDialog(self, info)
+
+            # Show the dialog
+            dialog.exec()
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
