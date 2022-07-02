@@ -1,3 +1,4 @@
+from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -178,8 +179,7 @@ class FullImage(QGraphicsView):
 
     @staticmethod
     def undo(func: Callable) -> Callable:
-        def wrapper(*args, **kwargs):
-            self = args[0]
+        def wrapper(self: FullImage, *args, **kwargs):
             if self._pilImage is not None:
                 # Add the current image to the undo buffer
                 self._undoBuffer.append(self._pilImage)
