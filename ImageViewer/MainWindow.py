@@ -79,8 +79,11 @@ class MainWindow(QMainWindow):
         # Index of the current image
         self._currentImageIndex = 0
 
-        # Setup a widget for the full sized image
-        self._fullSizeImage: Optional[FullImage] = None
+        # Create a graphics view with just the filename for now
+        self._fullSizeImage = FullImage()
+
+        # Add this widget to the stack
+        self._stack.addWidget(self._fullSizeImage)
 
         # Keep track of whether the image is maximised or not
         self._imageMaximised = False
@@ -230,108 +233,107 @@ class MainWindow(QMainWindow):
         self._updateMenu()
 
     def _updateMenu(self) -> None:
-        if self._imageMaximised and self._fullSizeImage is not None:
+        # Only add the actions if they haven't already been added
+        if not self._actionsAdded:
+            # Connect to the zoom function of the full sized image
+            self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
 
-            # Only add the actions if they haven't already been added
-            if not self._actionsAdded:
-                # Connect to the zoom function of the full sized image
-                self._zoomAction.triggered.connect(self._fullSizeImage.ZoomImage) # type: ignore
+            # Connect to the reset zoom function of the full sized image
+            self._resetZoomAction.triggered.connect(self._fullSizeImage.ResetZoom) # type: ignore
 
-                # Connect to the reset zoom function of the full sized image
-                self._resetZoomAction.triggered.connect(self._fullSizeImage.ResetZoom) # type: ignore
+            # Connect to the crop function of the full sized image
+            self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
 
-                # Connect to the crop function of the full sized image
-                self._cropAction.triggered.connect(self._fullSizeImage.CropImage) # type: ignore
+            # Connect to the sharped function of the full sized image
+            self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
 
-                # Connect to the sharped function of the full sized image
-                self._sharpenAction.triggered.connect(self._fullSizeImage.Sharpen) # type: ignore
+            # Connect to the blur function of the full sized image
+            self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
 
-                # Connect to the blur function of the full sized image
-                self._blurAction.triggered.connect(self._fullSizeImage.Blur) # type: ignore
+            # Connect to the contour function of the full sized image
+            self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
 
-                # Connect to the contour function of the full sized image
-                self._contourAction.triggered.connect(self._fullSizeImage.Contour) # type: ignore
+            # Connect to the detail function of the full sized image
+            self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
 
-                # Connect to the detail function of the full sized image
-                self._detailAction.triggered.connect(self._fullSizeImage.Detail) # type: ignore
+            # Connect to the edge enhance function of the full sized image
+            self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
 
-                # Connect to the edge enhance function of the full sized image
-                self._edgeEnhanceAction.triggered.connect(self._fullSizeImage.EdgeEnhance) # type: ignore
+            # Connect to the emboss function of the full sized image
+            self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
 
-                # Connect to the emboss function of the full sized image
-                self._embossAction.triggered.connect(self._fullSizeImage.Emboss) # type: ignore
+            # Connect to the find edges function of the full sized image
+            self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
 
-                # Connect to the find edges function of the full sized image
-                self._findEdgesAction.triggered.connect(self._fullSizeImage.FindEdges) # type: ignore
+            # Connect to the smooth function of the full sized image
+            self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
 
-                # Connect to the smooth function of the full sized image
-                self._smoothAction.triggered.connect(self._fullSizeImage.Smooth) # type: ignore
+            # Connect to the unharp mask function of the full sized image
+            self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
 
-                # Connect to the unharp mask function of the full sized image
-                self._unsharpMaskAction.triggered.connect(self._fullSizeImage.UnsharpMask) # type: ignore
+            # Connect to the auto contrast function of the full sized image
+            self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
 
-                # Connect to the auto contrast function of the full sized image
-                self._autoContrastAction.triggered.connect(self._fullSizeImage.AutoContrast) # type: ignore
+            # Connect to the increase colour function of the full sized image
+            self._increaseColourAction.triggered.connect(self._fullSizeImage.IncreaseColour) # type: ignore
 
-                # Connect to the increase colour function of the full sized image
-                self._increaseColourAction.triggered.connect(self._fullSizeImage.IncreaseColour) # type: ignore
+            # Connect to the decrease colour function of the full sized image
+            self._decreaseColourAction.triggered.connect(self._fullSizeImage.DecreaseColour) # type: ignore
 
-                # Connect to the decrease colour function of the full sized image
-                self._decreaseColourAction.triggered.connect(self._fullSizeImage.DecreaseColour) # type: ignore
+            # Connect to the increase contrast function of the full sized image
+            self._increaseContrastAction.triggered.connect(self._fullSizeImage.IncreaseContrast) # type: ignore
 
-                # Connect to the increase contrast function of the full sized image
-                self._increaseContrastAction.triggered.connect(self._fullSizeImage.IncreaseContrast) # type: ignore
+            # Connect to the decrease contrast function of the full sized image
+            self._decreaseContrastAction.triggered.connect(self._fullSizeImage.DecreaseContrast) # type: ignore
 
-                # Connect to the decrease contrast function of the full sized image
-                self._decreaseContrastAction.triggered.connect(self._fullSizeImage.DecreaseContrast) # type: ignore
+            # Connect to the increase brightness function of the full sized image
+            self._increaseBrightnessAction.triggered.connect(self._fullSizeImage.IncreaseBrightness) # type: ignore
 
-                # Connect to the increase brightness function of the full sized image
-                self._increaseBrightnessAction.triggered.connect(self._fullSizeImage.IncreaseBrightness) # type: ignore
+            # Connect to the decrease brightness function of the full sized image
+            self._decreaseBrightnessAction.triggered.connect(self._fullSizeImage.DecreaseBrightness) # type: ignore
 
-                # Connect to the decrease brightness function of the full sized image
-                self._decreaseBrightnessAction.triggered.connect(self._fullSizeImage.DecreaseBrightness) # type: ignore
+            # Connect to the undo function of the full sized image
+            self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
 
-                # Connect to the undo function of the full sized image
-                self._undoAction.triggered.connect(self._fullSizeImage.UndoLastChange) # type: ignore
+            # Connect to the save function of the full sized image
+            self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
 
-                # Connect to the save function of the full sized image
-                self._saveAction.triggered.connect(self._fullSizeImage.SaveImage) # type: ignore
+            # Add the actions to the menus
+            self._fileMenu.addAction(self._saveAction)
 
-                # Add the actions to the menus
-                self._fileMenu.addAction(self._saveAction)
+            self._viewMenu.addAction(self._returnAction)
+            self._viewMenu.addAction(self._nextAction)
+            self._viewMenu.addAction(self._prevAction)
+            self._viewMenu.addSeparator()
+            self._viewMenu.addAction(self._zoomAction)
+            self._viewMenu.addAction(self._resetZoomAction)
 
-                self._viewMenu.addAction(self._returnAction)
-                self._viewMenu.addAction(self._nextAction)
-                self._viewMenu.addAction(self._prevAction)
-                self._viewMenu.addSeparator()
-                self._viewMenu.addAction(self._zoomAction)
-                self._viewMenu.addAction(self._resetZoomAction)
+            self._imageMenu.addAction(self._cropAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._increaseColourAction)
+            self._imageMenu.addAction(self._decreaseColourAction)
+            self._imageMenu.addAction(self._increaseContrastAction)
+            self._imageMenu.addAction(self._decreaseContrastAction)
+            self._imageMenu.addAction(self._increaseBrightnessAction)
+            self._imageMenu.addAction(self._decreaseBrightnessAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._sharpenAction)
+            self._imageMenu.addAction(self._blurAction)
+            self._imageMenu.addAction(self._contourAction)
+            self._imageMenu.addAction(self._detailAction)
+            self._imageMenu.addAction(self._edgeEnhanceAction)
+            self._imageMenu.addAction(self._embossAction)
+            self._imageMenu.addAction(self._findEdgesAction)
+            self._imageMenu.addAction(self._smoothAction)
+            self._imageMenu.addAction(self._unsharpMaskAction)
+            self._imageMenu.addAction(self._autoContrastAction)
+            self._imageMenu.addSeparator()
+            self._imageMenu.addAction(self._undoAction)
 
-                self._imageMenu.addAction(self._cropAction)
-                self._imageMenu.addSeparator()
-                self._imageMenu.addAction(self._increaseColourAction)
-                self._imageMenu.addAction(self._decreaseColourAction)
-                self._imageMenu.addAction(self._increaseContrastAction)
-                self._imageMenu.addAction(self._decreaseContrastAction)
-                self._imageMenu.addAction(self._increaseBrightnessAction)
-                self._imageMenu.addAction(self._decreaseBrightnessAction)
-                self._imageMenu.addSeparator()
-                self._imageMenu.addAction(self._sharpenAction)
-                self._imageMenu.addAction(self._blurAction)
-                self._imageMenu.addAction(self._contourAction)
-                self._imageMenu.addAction(self._detailAction)
-                self._imageMenu.addAction(self._edgeEnhanceAction)
-                self._imageMenu.addAction(self._embossAction)
-                self._imageMenu.addAction(self._findEdgesAction)
-                self._imageMenu.addAction(self._smoothAction)
-                self._imageMenu.addAction(self._unsharpMaskAction)
-                self._imageMenu.addAction(self._autoContrastAction)
-                self._imageMenu.addSeparator()
-                self._imageMenu.addAction(self._undoAction)
+            # Indicate that the actions have been added
+            self._actionsAdded = True
 
-                # Indicate that the actions have been added
-                self._actionsAdded = True
-
+        if self._imageMaximised:
             # Enable the menus
             self._fileMenu.setEnabled(True)
             self._viewMenu.setEnabled(True)
@@ -501,15 +503,8 @@ class MainWindow(QMainWindow):
         self._currentImageIndex = self._imageList.index(imagePath)
 
     def _MaximiseImage(self, imagePath: Path) -> None:
-        if not self._fullSizeImage:
-            # Create a graphics view with just the filename for now
-            self._fullSizeImage = FullImage(imagePath)
-
-            # Add this widget to the stack
-            self._stack.addWidget(self._fullSizeImage)
-        else:
-            # View already created, it just needs reinitialisation with the new path
-            self._fullSizeImage.InitialiseView(imagePath)
+        # View already created, it just needs reinitialisation with the new path
+        self._fullSizeImage.InitialiseView(imagePath)
 
         # Swap the stack to this widget
         self._stack.setCurrentWidget(self._fullSizeImage)
