@@ -97,6 +97,10 @@ class MainWindow(QMainWindow):
         # Set the default path
         self._currentPath = Path.home() / 'Pictures'
 
+        # Check this path exists, if not use home instead
+        if not self._currentPath.exists():
+            self._currentPath = Path.home()
+
         # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
