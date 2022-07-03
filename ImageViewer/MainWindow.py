@@ -9,8 +9,7 @@ from PySide6.QtCore import Qt, Signal, QTimer, QObject, QEvent
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
-from ImageViewer.FileTypes import supportedExtensions
-from ImageViewer.Constants import START_X, START_Y, START_WIDTH, START_HEIGHT, MIN_WIDTH
+from ImageViewer.Constants import START_X, START_Y, START_WIDTH, START_HEIGHT, MIN_WIDTH, SUPPORTED_EXTENSIONS
 
 @dataclass
 class FolderInfo:
@@ -179,7 +178,7 @@ class MainWindow(QMainWindow):
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
-        return sorted([image for image in self._currentPath.iterdir() if image.suffix.lower() in supportedExtensions.values()], key=lambda x: x.name.lower())
+        return sorted([image for image in self._currentPath.iterdir() if image.suffix.lower() in SUPPORTED_EXTENSIONS.values()], key=lambda x: x.name.lower())
 
     def _GetFolderList(self) -> list[Path]:
         # Get the list of non-hidden folders in this folder
