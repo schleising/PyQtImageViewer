@@ -4,7 +4,7 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QStackedWidget
-from PySide6.QtGui import QAction, QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence
+from PySide6.QtGui import QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence
 from PySide6.QtCore import Qt, Signal, QTimer, QObject, QEvent
 
 from ImageViewer.Thumbnail import Thumbnail
