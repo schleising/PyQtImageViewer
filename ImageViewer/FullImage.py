@@ -8,13 +8,18 @@ from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 import ImageViewer.ImageTools as ImageTools
 
 class FullImage(QGraphicsView):
+    # Signals to enable and disable menu items
+    resetZoomEnableSignal = Signal(bool)
+    rectPresentSignal = Signal(bool)
+    imageModifiedSignal = Signal(bool)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
@@ -69,6 +74,9 @@ class FullImage(QGraphicsView):
             self._scene.removeItem(self._graphicsRectItem)
             self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
+            # Signal the menu item to be disabled
+            self.rectPresentSignal.emit(False)
+
         # Boolean indicating whether a change to the image can be saved
         self._imageCanBeSaved = False
 
@@ -114,8 +122,14 @@ class FullImage(QGraphicsView):
             # Set the rectangle to None
             self._graphicsRectItem = None
 
+            # Signal the menu item to be disabled
+            self.rectPresentSignal.emit(False)
+
             # Indicate that we are zoomed
             self._zoomed = True
+
+            # Signal the menu item to be enabled
+            self.resetZoomEnableSignal.emit(True)
 
     def ResetZoom(self) -> None:
         if self._pixmapGraphicsItem:
@@ -124,6 +138,9 @@ class FullImage(QGraphicsView):
 
             # We are no longer zoomed
             self._zoomed = False
+
+            # Signal the menu item to be disabled
+            self.resetZoomEnableSignal.emit(False)
 
     def _updatePixmap(self) -> None:
         if self._pilImage is not None:
@@ -134,6 +151,9 @@ class FullImage(QGraphicsView):
                 # Set the rect to None
                 self._graphicsRectItem = None
 
+            # Signal the menu item to be disabled
+                self.rectPresentSignal.emit(False)
+    
             # Convert the pillow image into a QImage
             qtImage = self._pilImage.toqimage()
 
@@ -157,6 +177,9 @@ class FullImage(QGraphicsView):
             # Indicate that we are not zoomed
             self._zoomed = False
 
+            # Signal the menu item to be disabled
+            self.resetZoomEnableSignal.emit(False)
+
     def UndoLastChange(self) -> None:
         # If there are items in the buffer
         if self._undoBuffer:
@@ -169,6 +192,9 @@ class FullImage(QGraphicsView):
         if not self._undoBuffer:
             # If the undo buffer has been exhausted we are back to the original image so disable saving
             self._imageCanBeSaved = False
+
+            # Signal the menu item to be disabled
+            self.imageModifiedSignal.emit(False)
 
     def SaveImage(self) -> None:
         if self._imageCanBeSaved and self._pilImage is not None:
@@ -193,6 +219,9 @@ class FullImage(QGraphicsView):
 
                 # Indicate that the image can be saved
                 self._imageCanBeSaved = True
+
+                # Signal the menu item to be enabled
+                self.imageModifiedSignal.emit(True)
 
         return wrapper
 
@@ -376,6 +405,9 @@ class FullImage(QGraphicsView):
                 # Set the rect to None
                 self._graphicsRectItem = None
 
+                # Signal the menu item to be disabled
+                self.rectPresentSignal.emit(False)
+
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
 
@@ -412,6 +444,9 @@ class FullImage(QGraphicsView):
             # Set the fill to dodger blue, 50% opaque
             self._graphicsRectItem.setBrush(DODGER_BLUE_50PC)
 
+            # Signal the menu item to be enabled
+            self.rectPresentSignal.emit(True)
+
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
 
@@ -422,12 +457,18 @@ class FullImage(QGraphicsView):
             # Show that we have zoomed
             self._zoomed = True
 
+            # Signal the menu item to be enabled
+            self.resetZoomEnableSignal.emit(True)
+
         elif event.angleDelta().y() < 0:
             # Scale the image down by the zoom factor
             self.scale(1 / ZOOM_SCALE_FACTOR, 1 / ZOOM_SCALE_FACTOR)
 
             # Show that we have zoomed
             self._zoomed = True
+
+            # Signal the menu item to be enabled
+            self.resetZoomEnableSignal.emit(True)
 
     def scrollContentsBy(self, dx: int, dy: int) -> None:
         super().scrollContentsBy(dx, dy)

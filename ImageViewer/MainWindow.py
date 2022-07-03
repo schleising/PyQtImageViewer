@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 import logging
 
 from PySide6.QtWidgets import QMainWindow, QScrollArea, QGridLayout, QWidget, QStackedWidget
-from PySide6.QtGui import QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence
+from PySide6.QtGui import QKeyEvent, QResizeEvent, QMouseEvent, QKeySequence, QAction
 from PySide6.QtCore import Qt, Signal, QTimer, QObject, QEvent
 
 from ImageViewer.Thumbnail import Thumbnail
@@ -124,21 +124,21 @@ class MainWindow(QMainWindow):
         self._viewMenu = self._menuBar.addMenu('Show')
         self._imageMenu = self._menuBar.addMenu('Image')
 
-        # Add the actions to the file menu
-        self._fileMenu.addAction('Save', QKeySequence.Save, self._fullSizeImage.SaveImage)
+        # Add the actions to the file menu, have to cast here to overcome the PySide6 stubs
+        self._saveAction = cast(QAction, self._fileMenu.addAction('Save', QKeySequence.Save, self._fullSizeImage.SaveImage))
 
         # Add the actions to the view menu
         self._viewMenu.addAction('Return to Browser', QKeySequence(Qt.Key.Key_Up), self._returnToBrowser)
         self._viewMenu.addAction('Next', QKeySequence(Qt.Key.Key_Right), self._nextImage)
         self._viewMenu.addAction('Previous', QKeySequence(Qt.Key.Key_Left), self._prevImage)
         self._viewMenu.addSeparator()
-        self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage)
-        self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom)
+        self._zoomAction = cast(QAction, self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage))
+        self._resetZoomAction = cast(QAction, self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom))
         self._viewMenu.addSeparator()
         self._viewMenu.addAction('Image Information', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_I), self._fullSizeImage.ImageInfo)
 
         # Add the actions to the image menu
-        self._imageMenu.addAction('Crop to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_C), self._fullSizeImage.CropImage)
+        self._cropAction = cast(QAction, self._imageMenu.addAction('Crop to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_C), self._fullSizeImage.CropImage))
         self._imageMenu.addSeparator()
         self._imageMenu.addAction('Increase Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseColour)
         self._imageMenu.addAction('Decrease Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseColour)
@@ -159,7 +159,17 @@ class MainWindow(QMainWindow):
         self._imageMenu.addAction('Unsharp Mask', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U), self._fullSizeImage.UnsharpMask)
         self._imageMenu.addAction('Auto Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A), self._fullSizeImage.AutoContrast)
         self._imageMenu.addSeparator()
-        self._imageMenu.addAction('Undo', QKeySequence.Undo, self._fullSizeImage.UndoLastChange)
+        self._undoAction = cast(QAction, self._imageMenu.addAction('Undo', QKeySequence.Undo, self._fullSizeImage.UndoLastChange))
+
+        # Connect the signals to the QAction.setEnabled() slots
+        self._fullSizeImage.resetZoomEnableSignal.connect(self._resetZoomAction.setEnabled)
+        self._fullSizeImage.rectPresentSignal.connect(self._zoomAction.setEnabled)
+        self._fullSizeImage.rectPresentSignal.connect(self._cropAction.setEnabled)
+        self._fullSizeImage.imageModifiedSignal.connect(self._saveAction.setEnabled)
+        self._fullSizeImage.imageModifiedSignal.connect(self._undoAction.setEnabled)
+
+        # Connect the image modified signal to the _fileModified function
+        self._fullSizeImage.imageModifiedSignal.connect(self._fileModified)
 
         # Disable the menus for now
         self._updateMenu()
@@ -170,11 +180,33 @@ class MainWindow(QMainWindow):
             self._fileMenu.setEnabled(True)
             self._viewMenu.setEnabled(True)
             self._imageMenu.setEnabled(True)
+
+            # Disable the reset zoom, rect related and undo actions
+            self._resetZoomAction.setEnabled(False)
+            self._zoomAction.setEnabled(False)
+            self._cropAction.setEnabled(False)
+            self._saveAction.setEnabled(False)
+            self._undoAction.setEnabled(False)
         else:
             # Disable the menus
             self._fileMenu.setEnabled(False)
             self._viewMenu.setEnabled(False)
             self._imageMenu.setEnabled(False)
+
+    def _fileModified(self, modified: bool) -> None:
+        # Get the current window title
+        title = self.windowTitle()
+
+        if modified:
+            # If the file has been modified, check that the * is not already there
+            if not title.endswith(' *'):
+                # If the * is not there, add it
+                self.setWindowTitle(f'{title} *')
+        else:
+            # If the file has not been modified check whether there is a * at the end of the title
+            if title.endswith(' *'):
+                # If a * is present, remove it
+                self.setWindowTitle(title[:-2])
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
