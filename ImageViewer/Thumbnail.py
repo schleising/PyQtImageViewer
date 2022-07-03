@@ -3,7 +3,13 @@ from pathlib import Path
 from typing import Optional
 import logging
 
-from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QGraphicsOpacityEffect
+from PySide6.QtWidgets import (
+    QLabel,
+    QWidget,
+    QVBoxLayout,
+    QGraphicsOpacityEffect,
+    QApplication
+)
 from PySide6.QtGui import (
     QPixmap,
     QMouseEvent,
@@ -105,6 +111,9 @@ class Thumbnail(QWidget):
         self._thumbnailImage = PixmapLabel()
         self._thumbnailText = QLabel()
         self._layout = QVBoxLayout()
+
+        # Work out the scaling of the images that are loaded
+        self._scaledImageSize = QApplication.screens()[0].geometry().width() // 8
 
         # Set the minimum size of this widget
         self._thumbnailImage.setMinimumSize(self._thumbnailSize, self._thumbnailSize)
@@ -270,6 +279,9 @@ class Thumbnail(QWidget):
 
             # Use Pillow to open the image and convert to a QPixmap
             pilImage = Image.open(self.ImagePath)
+
+            # Scale the in memory image
+            pilImage.thumbnail((self._scaledImageSize, self._scaledImageSize))
 
             # Log that PIL the image load has completed
             logging.log(logging.DEBUG, f'PIL Loaded {self.ImagePath}')
