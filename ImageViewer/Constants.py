@@ -10,3 +10,12 @@ MIN_WIDTH = START_WIDTH
 
 DODGER_BLUE = QColor(30, 144, 255, 255)
 DODGER_BLUE_50PC = QColor(30, 144, 255, 128)
+
+# List of supported extensions
+SUPPORTED_EXTENSIONS = {
+    'Graphics Interchange Format': '.gif',
+    'JPG Image': '.jpg',
+    'JPEG Image': '.jpeg',
+    'Portable Network Graphic': '.png',
+    'WEBP': '.webp',
+}
