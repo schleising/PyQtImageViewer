@@ -168,6 +168,9 @@ class MainWindow(QMainWindow):
         self._fullSizeImage.imageModifiedSignal.connect(self._saveAction.setEnabled)
         self._fullSizeImage.imageModifiedSignal.connect(self._undoAction.setEnabled)
 
+        # Connect the image modified signal to the _fileModified function
+        self._fullSizeImage.imageModifiedSignal.connect(self._fileModified)
+
         # Disable the menus for now
         self._updateMenu()
 
@@ -189,6 +192,21 @@ class MainWindow(QMainWindow):
             self._fileMenu.setEnabled(False)
             self._viewMenu.setEnabled(False)
             self._imageMenu.setEnabled(False)
+
+    def _fileModified(self, modified: bool) -> None:
+        # Get the current window title
+        title = self.windowTitle()
+
+        if modified:
+            # If the file has been modified, check that the * is not already there
+            if not title.endswith(' *'):
+                # If the * is not there, add it
+                self.setWindowTitle(f'{title} *')
+        else:
+            # If the file has not been modified check whether there is a * at the end of the title
+            if title.endswith(' *'):
+                # If a * is present, remove it
+                self.setWindowTitle(title[:-2])
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
