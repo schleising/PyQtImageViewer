@@ -104,9 +104,6 @@ class MainWindow(QMainWindow):
         # Set a time for 150ms to see if a file open event has happened, otherwise load the default folder
         QTimer.singleShot(150, self.StartUpTimerExpired)
 
-        # Boolean to indicate whether we have already added the actions
-        self._actionsAdded = False
-
         # Add a menu for previous and next images, disabled to start with
         self._addMenu()
 
@@ -128,50 +125,47 @@ class MainWindow(QMainWindow):
         self._viewMenu = self._menuBar.addMenu('Show')
         self._imageMenu = self._menuBar.addMenu('Image')
 
-        # Disable the actions for now
+        # Add the actions to the file menu
+        self._fileMenu.addAction('Save', QKeySequence.Save, self._fullSizeImage.SaveImage)
+
+        # Add the actions to the view menu
+        self._viewMenu.addAction('Return to Browser', QKeySequence(Qt.Key.Key_Up), self._returnToBrowser)
+        self._viewMenu.addAction('Next', QKeySequence(Qt.Key.Key_Right), self._nextImage)
+        self._viewMenu.addAction('Previous', QKeySequence(Qt.Key.Key_Left), self._prevImage)
+        self._viewMenu.addSeparator()
+        self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage)
+        self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom)
+        self._viewMenu.addSeparator()
+        self._viewMenu.addAction('Image Information', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_I), self._fullSizeImage.ImageInfo)
+
+        # Add the actions to the image menu
+        self._imageMenu.addAction('Crop to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_C), self._fullSizeImage.CropImage)
+        self._imageMenu.addSeparator()
+        self._imageMenu.addAction('Increase Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseColour)
+        self._imageMenu.addAction('Decrease Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseColour)
+        self._imageMenu.addAction('Increase Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseContrast)
+        self._imageMenu.addAction('Decrease Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseContrast)
+        self._imageMenu.addAction('Increase Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Right), self._fullSizeImage.IncreaseBrightness)
+        self._imageMenu.addAction('Decrease Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Left), self._fullSizeImage.DecreaseBrightness)
+        self._imageMenu.addAction('Black and White', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_W), self._fullSizeImage.BlackAndWhite)
+        self._imageMenu.addSeparator()
+        self._imageMenu.addAction('Sharpen', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S), self._fullSizeImage.Sharpen)
+        self._imageMenu.addAction('Blur', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_B), self._fullSizeImage.Blur)
+        self._imageMenu.addAction('Contour', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_C), self._fullSizeImage.Contour)
+        self._imageMenu.addAction('Detail', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D), self._fullSizeImage.Detail)
+        self._imageMenu.addAction('Edge Enhance', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E), self._fullSizeImage.EdgeEnhance)
+        self._imageMenu.addAction('Emboss', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M), self._fullSizeImage.Emboss)
+        self._imageMenu.addAction('Find Edges', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_F), self._fullSizeImage.FindEdges)
+        self._imageMenu.addAction('Smooth', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O), self._fullSizeImage.Smooth)
+        self._imageMenu.addAction('Unsharp Mask', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U), self._fullSizeImage.UnsharpMask)
+        self._imageMenu.addAction('Auto Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A), self._fullSizeImage.AutoContrast)
+        self._imageMenu.addSeparator()
+        self._imageMenu.addAction('Undo', QKeySequence.Undo, self._fullSizeImage.UndoLastChange)
+
+        # Disable the menus for now
         self._updateMenu()
 
     def _updateMenu(self) -> None:
-        # Only add the actions if they haven't already been added
-        if not self._actionsAdded:
-            # Add the actions to the menus
-            self._fileMenu.addAction('Save', QKeySequence.Save, self._fullSizeImage.SaveImage)
-
-            self._viewMenu.addAction('Return to Browser', QKeySequence(Qt.Key.Key_Up), self._returnToBrowser)
-            self._viewMenu.addAction('Next', QKeySequence(Qt.Key.Key_Right), self._nextImage)
-            self._viewMenu.addAction('Previous', QKeySequence(Qt.Key.Key_Left), self._prevImage)
-            self._viewMenu.addSeparator()
-            self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage)
-            self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom)
-            self._viewMenu.addSeparator()
-            self._viewMenu.addAction('Image Information', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_I), self._fullSizeImage.ImageInfo)
-
-            self._imageMenu.addAction('Crop to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_C), self._fullSizeImage.CropImage)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction('Increase Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseColour)
-            self._imageMenu.addAction('Decrease Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseColour)
-            self._imageMenu.addAction('Increase Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseContrast)
-            self._imageMenu.addAction('Decrease Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseContrast)
-            self._imageMenu.addAction('Increase Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Right), self._fullSizeImage.IncreaseBrightness)
-            self._imageMenu.addAction('Decrease Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Left), self._fullSizeImage.DecreaseBrightness)
-            self._imageMenu.addAction('Black and White', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_W), self._fullSizeImage.BlackAndWhite)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction('Sharpen', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S), self._fullSizeImage.Sharpen)
-            self._imageMenu.addAction('Blur', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_B), self._fullSizeImage.Blur)
-            self._imageMenu.addAction('Contour', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_C), self._fullSizeImage.Contour)
-            self._imageMenu.addAction('Detail', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D), self._fullSizeImage.Detail)
-            self._imageMenu.addAction('Edge Enhance', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E), self._fullSizeImage.EdgeEnhance)
-            self._imageMenu.addAction('Emboss', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M), self._fullSizeImage.Emboss)
-            self._imageMenu.addAction('Find Edges', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_F), self._fullSizeImage.FindEdges)
-            self._imageMenu.addAction('Smooth', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O), self._fullSizeImage.Smooth)
-            self._imageMenu.addAction('Unsharp Mask', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U), self._fullSizeImage.UnsharpMask)
-            self._imageMenu.addAction('Auto Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A), self._fullSizeImage.AutoContrast)
-            self._imageMenu.addSeparator()
-            self._imageMenu.addAction('Undo', QKeySequence.Undo, self._fullSizeImage.UndoLastChange)
-
-            # Indicate that the actions have been added
-            self._actionsAdded = True
-
         if self._imageMaximised:
             # Enable the menus
             self._fileMenu.setEnabled(True)
