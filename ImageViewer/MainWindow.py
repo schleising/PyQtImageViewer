@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, Signal, QTimer, QObject, QEvent
 
 from ImageViewer.Thumbnail import Thumbnail
 from ImageViewer.FullImage import FullImage
+from ImageViewer.SliderDialog import SliderDialog
 from ImageViewer.Constants import START_X, START_Y, START_WIDTH, START_HEIGHT, MIN_WIDTH, SUPPORTED_EXTENSIONS
 
 @dataclass
@@ -132,6 +133,8 @@ class MainWindow(QMainWindow):
         self._viewMenu.addAction('Next', QKeySequence(Qt.Key.Key_Right), self._nextImage)
         self._viewMenu.addAction('Previous', QKeySequence(Qt.Key.Key_Left), self._prevImage)
         self._viewMenu.addSeparator()
+        self._viewMenu.addAction('Adjust Image', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_A), self._openAdjustDialog)
+        self._viewMenu.addSeparator()
         self._zoomAction = cast(QAction, self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage))
         self._resetZoomAction = cast(QAction, self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom))
         self._viewMenu.addSeparator()
@@ -207,6 +210,10 @@ class MainWindow(QMainWindow):
             if title.endswith(' *'):
                 # If a * is present, remove it
                 self.setWindowTitle(title[:-2])
+
+    def _openAdjustDialog(self) -> None:
+        sliderDialog = SliderDialog(self._fullSizeImage)
+        sliderDialog.exec()
 
     def _GetImagePathList(self) -> list[Path]:
         # Return the list of images Paths, sorted alphabetically (case insensitive)
