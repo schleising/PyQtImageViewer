@@ -28,6 +28,9 @@ class SliderDialog(QDialog):
         # Create an overall VBoxLayout
         self._vBoxLayout = QVBoxLayout()
 
+        # Set the dialog to be a fixed size
+        self._vBoxLayout.setSizeConstraint(QGridLayout.SetFixedSize)
+
         # Create a grid layout for the sliders and their labels
         self._gridLayout = QGridLayout()
 
@@ -42,6 +45,7 @@ class SliderDialog(QDialog):
         self._colourSlider.setMaximum(20)
         self._colourSlider.setValue(10)
         self._colourSlider.valueChanged.connect(self._sliderChanged) # type: ignore
+        self._colourSlider.setFixedWidth(300)
 
         # Set the contrast slider options
         self._contrastSlider.setTracking(True)
@@ -49,6 +53,7 @@ class SliderDialog(QDialog):
         self._contrastSlider.setMaximum(20)
         self._contrastSlider.setValue(10)
         self._contrastSlider.valueChanged.connect(self._sliderChanged) # type: ignore
+        self._contrastSlider.setFixedWidth(300)
 
         # Set the brightness slider options
         self._brightnessSlider.setTracking(True)
@@ -56,6 +61,7 @@ class SliderDialog(QDialog):
         self._brightnessSlider.setMaximum(20)
         self._brightnessSlider.setValue(10)
         self._brightnessSlider.valueChanged.connect(self._sliderChanged) # type: ignore
+        self._brightnessSlider.setFixedWidth(300)
 
         # Add the colour label and slider
         self._gridLayout.addWidget(QLabel('Colour'), 0, 0)
