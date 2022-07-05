@@ -132,6 +132,8 @@ class MainWindow(QMainWindow):
         self._viewMenu.addAction('Next', QKeySequence(Qt.Key.Key_Right), self._nextImage)
         self._viewMenu.addAction('Previous', QKeySequence(Qt.Key.Key_Left), self._prevImage)
         self._viewMenu.addSeparator()
+        self._viewMenu.addAction('Adjust Image', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_A), self._fullSizeImage._openAdjustDialog)
+        self._viewMenu.addSeparator()
         self._zoomAction = cast(QAction, self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage))
         self._resetZoomAction = cast(QAction, self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom))
         self._viewMenu.addSeparator()

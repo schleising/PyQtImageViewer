@@ -8,11 +8,12 @@ from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal, Slot
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
 import ImageViewer.ImageTools as ImageTools
+from ImageViewer.SliderDialog import SliderDialog
 
 class FullImage(QGraphicsView):
     # Signals to enable and disable menu items
@@ -34,6 +35,9 @@ class FullImage(QGraphicsView):
 
         # A Qt Image from pillow to contain the original image
         self._pilImage: Optional[Image.Image] = None
+
+        # A temporary image for use when adjusting colour, contrast and brightness
+        self._adjustedImage: Optional[Image.Image] = None
 
         # Create a graphics scene for this graphics view
         self._scene = QGraphicsScene()
@@ -142,7 +146,7 @@ class FullImage(QGraphicsView):
             # Signal the menu item to be disabled
             self.resetZoomEnableSignal.emit(False)
 
-    def _updatePixmap(self) -> None:
+    def UpdatePixmap(self, adjstedImage: Optional[Image.Image] = None) -> None:
         if self._pilImage is not None:
             if self._graphicsRectItem is not None:
                 # Remove the rect if it exists
@@ -155,7 +159,10 @@ class FullImage(QGraphicsView):
                 self.rectPresentSignal.emit(False)
     
             # Convert the pillow image into a QImage
-            qtImage = self._pilImage.toqimage()
+            if adjstedImage is None:
+                qtImage = self._pilImage.toqimage()
+            else:
+                qtImage = adjstedImage.toqimage()
 
             # Set the pixmap to this new image
             self._pixmap.convertFromImage(qtImage)
@@ -187,7 +194,7 @@ class FullImage(QGraphicsView):
             self._pilImage = self._undoBuffer.pop()
 
             # Update the pixmap to this older image
-            self._updatePixmap()
+            self.UpdatePixmap()
 
         if not self._undoBuffer:
             # If the undo buffer has been exhausted we are back to the original image so disable saving
@@ -206,7 +213,7 @@ class FullImage(QGraphicsView):
 
     @staticmethod
     def undo(func: Callable) -> Callable:
-        def wrapper(self: FullImage, *args, **kwargs):
+        def wrapper(self: FullImage, *args:tuple[Any], **kwargs: dict[str, Any]):
             if self._pilImage is not None:
                 # Add the current image to the undo buffer
                 self._undoBuffer.append(self._pilImage)
@@ -215,7 +222,7 @@ class FullImage(QGraphicsView):
                 func(self, args, kwargs)
 
                 # Update the pixmap
-                self._updatePixmap()
+                self.UpdatePixmap()
 
                 # Indicate that the image can be saved
                 self._imageCanBeSaved = True
@@ -224,6 +231,11 @@ class FullImage(QGraphicsView):
                 self.imageModifiedSignal.emit(True)
 
         return wrapper
+
+    @undo
+    def UpdateImage(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
+        # Set the PIL image to the adjusted image storing the last PIL image in the undo buffer
+        self._pilImage = self._adjustedImage
 
     @undo
     def CropImage(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
@@ -354,6 +366,31 @@ class FullImage(QGraphicsView):
 
             # Show the dialog
             dialog.exec()
+
+    def _openAdjustDialog(self) -> None:
+        # Create the slider dialog sending in the slots for change, accept and cancel
+        sliderDialog = SliderDialog(self.SliderChanged, self.SliderChangeAccepted, self.SliderChangeRejected)
+
+        # Open the dialog
+        sliderDialog.exec()
+
+    def SliderChanged(self, colour: float, contrast: float, brightness: float) -> None:
+        if self._pilImage is not None:
+            # Adjust the colour in response to a menu selection without adding it to the undo buffer
+            self._adjustedImage = ImageTools.Colour(self._pilImage, colour)
+            self._adjustedImage = ImageTools.Contrast(self._adjustedImage, contrast)
+            self._adjustedImage = ImageTools.Brightness(self._adjustedImage, brightness)
+
+            # Update the pixmap
+            self.UpdatePixmap(self._adjustedImage)
+
+    def SliderChangeAccepted(self) -> None:
+        # If the change is accepted, update the image and undo buffer
+        self.UpdateImage()
+
+    def SliderChangeRejected(self) -> None:
+        # If the chane is not accepted, set the image back to the original bypassing the undo buffer
+        self.UpdatePixmap(self._pilImage)
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         super().resizeEvent(a0)
