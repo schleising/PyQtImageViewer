@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -9,16 +9,21 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QDialogButtonBox,
 )
-from PySide6.QtCore import Qt
-
-from ImageViewer.FullImage import FullImage
+from PySide6.QtCore import Qt, Signal
 
 class SliderDialog(QDialog):
-    def __init__(self, fullImage: FullImage, parent: Optional[QWidget] = None, f: Qt.WindowFlags = Qt.Dialog) -> None:
-        super().__init__(parent, f)
+    colourContrastBrightnessSignal = Signal(float, float, float)
+    acceptedSignal = Signal()
+    rejectedSignal = Signal()
 
-        # Create a class member for FullImage
-        self._fullImage = fullImage
+    def __init__(
+        self,
+        sliderChangedFunc: Callable[[float, float, float], None],
+        acceptedFunc: Callable[[], None],
+        rejectedFunc: Callable[[], None],
+        parent: Optional[QWidget] = None,
+        f: Qt.WindowFlags = Qt.Dialog) -> None:
+        super().__init__(parent, f)
 
         # Create an overall VBoxLayout
         self._vBoxLayout = QVBoxLayout()
@@ -33,21 +38,24 @@ class SliderDialog(QDialog):
 
         # Set the colour slider options
         self._colourSlider.setTracking(True)
-        self._colourSlider.setMinimum(-10)
-        self._colourSlider.setMaximum(10)
-        self._colourSlider.valueChanged.connect(self._fullImage.SliderColourChanged) # type: ignore
+        self._colourSlider.setMinimum(0)
+        self._colourSlider.setMaximum(20)
+        self._colourSlider.setValue(10)
+        self._colourSlider.valueChanged.connect(self._sliderChanged) # type: ignore
 
         # Set the contrast slider options
         self._contrastSlider.setTracking(True)
-        self._contrastSlider.setMinimum(-10)
-        self._contrastSlider.setMaximum(10)
-        self._contrastSlider.valueChanged.connect(self._fullImage.SliderContrastChanged) # type: ignore
+        self._contrastSlider.setMinimum(0)
+        self._contrastSlider.setMaximum(20)
+        self._contrastSlider.setValue(10)
+        self._contrastSlider.valueChanged.connect(self._sliderChanged) # type: ignore
 
         # Set the brightness slider options
         self._brightnessSlider.setTracking(True)
-        self._brightnessSlider.setMinimum(-10)
-        self._brightnessSlider.setMaximum(10)
-        self._brightnessSlider.valueChanged.connect(self._fullImage.SliderBrightnessChanged) # type: ignore
+        self._brightnessSlider.setMinimum(0)
+        self._brightnessSlider.setMaximum(20)
+        self._brightnessSlider.setValue(10)
+        self._brightnessSlider.valueChanged.connect(self._sliderChanged) # type: ignore
 
         # Add the colour label and slider
         self._gridLayout.addWidget(QLabel('Colour'), 0, 0)
@@ -68,22 +76,41 @@ class SliderDialog(QDialog):
         self._dialogButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
         # Connect the OK and Cancel buttons
-        self._dialogButtonBox.accepted.connect(self._accepted) # type: ignore
-        self._dialogButtonBox.rejected.connect(self._rejected) # type: ignore
+        self._dialogButtonBox.accepted.connect(self.accept) # type: ignore
+        self._dialogButtonBox.rejected.connect(self.reject) # type: ignore
 
         # Add the OK and Cancel buttons to the vbox layout
         self._vBoxLayout.addWidget(self._dialogButtonBox)
 
+        # Connect the colour, contrast and brightness changed signal
+        self.colourContrastBrightnessSignal.connect(sliderChangedFunc)
+
+        # Connect accept and reject to the accepted and rejected functions
+        self.acceptedSignal.connect(acceptedFunc)
+        self.rejectedSignal.connect(rejectedFunc)
+
         # Add the vbox layout to the dialog
         self.setLayout(self._vBoxLayout)
 
-    def _accepted(self) -> None:
-        self._fullImage.Colour(factor=(self._colourSlider.value() / 10) + 1.0)
-        self._fullImage.Contrast(factor=(self._contrastSlider.value() / 10) + 1.0)
-        self._fullImage.Brightness(factor=(self._brightnessSlider.value() / 10) + 1.0)
+    def _sliderChanged(self) -> None:
+        # Scale the colour, contrast and brightness values
+        colourValue = self._colourSlider.value() / 10
+        contrastValue = self._contrastSlider.value() / 10
+        brightnessValue = self._brightnessSlider.value() / 10
 
-        self.close()
+        # Send the values to the image
+        self.colourContrastBrightnessSignal.emit(colourValue, contrastValue, brightnessValue)
 
-    def _rejected(self) -> None:
-        self._fullImage.UpdatePixmap()
-        self.close()
+    def accept(self) -> None:
+        # Send the accepted signal
+        self.acceptedSignal.emit()
+
+        # Close the dialog
+        super().accept()
+
+    def reject(self) -> None:
+        # Send the rejected signal, this function is also called when pressing escape
+        self.rejectedSignal.emit()
+
+        # Close the dialog
+        super().reject()
