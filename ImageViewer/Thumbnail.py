@@ -26,7 +26,7 @@ from PIL.ImageQt import ImageQt
 # This seems to be necessary to ensure webp images can be loaded at startup
 import PIL.WebPImagePlugin as _
 
-from ImageViewer.Constants import DODGER_BLUE, DODGER_BLUE_50PC, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
+from ImageViewer.Constants import DODGER_BLUE, DODGER_BLUE_50PC, VIDEO_EXTENSIONS
 
 class PixmapLabel(QLabel):
     def __init__(self):
