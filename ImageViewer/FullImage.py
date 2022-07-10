@@ -606,3 +606,9 @@ class FullImage(QGraphicsView):
 
         # Get the scene coordinate of the centre of this view
         self._oldSceneCentre = self.mapToScene(self.rect().center())
+
+    def ReturnToBrowser(self) -> None:
+        # If there is a video playing, stop it
+        if self._mediaPlayer is not None:
+            # Stop the video
+            self._mediaPlayer.stop()

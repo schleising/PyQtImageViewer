@@ -513,6 +513,9 @@ class MainWindow(QMainWindow):
         pass
 
     def _returnToBrowser(self) -> None:
+        # Tell the full image window that we are returning to the browser
+        self._fullSizeImage.ReturnToBrowser()
+
         # Reset the stack back to the scroll widget
         self._stack.setCurrentWidget(self._scroll)
 
