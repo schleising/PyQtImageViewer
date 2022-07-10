@@ -28,3 +28,9 @@ VIDEO_EXTENSIONS = {
 
 # Full list of supported extensions
 SUPPORTED_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
+
+# Amount to skip video by
+VIDEO_SKIP_AMOUNT = 5000
+
+# Amount to adjust audio volume by
+AUDIO_ADJUST_AMOUNT = 0.1

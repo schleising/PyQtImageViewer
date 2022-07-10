@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
         self._fileMenu = self._menuBar.addMenu('File')
         self._viewMenu = self._menuBar.addMenu('Show')
         self._imageMenu = self._menuBar.addMenu('Image')
+        self._videoMenu = self._menuBar.addMenu('Video')
 
         # Add the actions to the file menu, have to cast here to overcome the PySide6 stubs
         self._saveAction = cast(QAction, self._fileMenu.addAction('Save', QKeySequence.Save, self._fullSizeImage.SaveImage))
@@ -163,6 +164,14 @@ class MainWindow(QMainWindow):
         self._imageMenu.addSeparator()
         self._undoAction = cast(QAction, self._imageMenu.addAction('Undo', QKeySequence.Undo, self._fullSizeImage.UndoLastChange))
 
+        # Add actions to the video menu
+        self._playPauseAction = cast(QAction, self._videoMenu.addAction('Play / Pause', QKeySequence(Qt.Key.Key_Space), self._fullSizeImage.PlayPause))
+        self._skipForwardsAction = cast(QAction, self._videoMenu.addAction('Skip Forwards', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right), self._fullSizeImage.SkipForwards))
+        self._skipBackwardsAction = cast(QAction, self._videoMenu.addAction('Skip Backwards', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left), self._fullSizeImage.SkipBackwards))
+        self._volUpAction = cast(QAction, self._videoMenu.addAction('Volume Up', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Up), self._fullSizeImage.IncreaseVolume))
+        self._volDownAction = cast(QAction, self._videoMenu.addAction('Volume Down', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Down), self._fullSizeImage.DecreaseVolume))
+        self._muteAction = cast(QAction, self._videoMenu.addAction('Toggle Mute', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_M), self._fullSizeImage.ToggleMute))
+
         # Connect the signals to the QAction.setEnabled() slots
         self._fullSizeImage.resetZoomEnableSignal.connect(self._resetZoomAction.setEnabled)
         self._fullSizeImage.canZoomToRectSignal.connect(self._zoomAction.setEnabled)
@@ -170,7 +179,7 @@ class MainWindow(QMainWindow):
         self._fullSizeImage.imageModifiedSignal.connect(self._saveAction.setEnabled)
         self._fullSizeImage.imageModifiedSignal.connect(self._undoAction.setEnabled)
 
-        # Connect signals to disable menu items if a video is loaded rather than an image
+        # Connect signals to enable menu items if an image is loaded rather than an video
         self._fullSizeImage.imageLoadedSignal.connect(self._adjustImageAction.setEnabled)
         self._fullSizeImage.imageLoadedSignal.connect(self._imageInfoAction.setEnabled)
         self._fullSizeImage.imageLoadedSignal.connect(self._increaseColourAction.setEnabled)
@@ -191,6 +200,14 @@ class MainWindow(QMainWindow):
         self._fullSizeImage.imageLoadedSignal.connect(self._unsharpMaskAction.setEnabled)
         self._fullSizeImage.imageLoadedSignal.connect(self._autoContrastAction.setEnabled)
 
+        # Connect signals to enable menu items if an image is loaded rather than an video
+        self._fullSizeImage.videoLoadedSignal.connect(self._playPauseAction.setEnabled)
+        self._fullSizeImage.videoLoadedSignal.connect(self._skipForwardsAction.setEnabled)
+        self._fullSizeImage.videoLoadedSignal.connect(self._skipBackwardsAction.setEnabled)
+        self._fullSizeImage.videoLoadedSignal.connect(self._volUpAction.setEnabled)
+        self._fullSizeImage.videoLoadedSignal.connect(self._volDownAction.setEnabled)
+        self._fullSizeImage.videoLoadedSignal.connect(self._muteAction.setEnabled)
+
         # Connect the image modified signal to the _fileModified function
         self._fullSizeImage.imageModifiedSignal.connect(self._fileModified)
 
@@ -203,6 +220,7 @@ class MainWindow(QMainWindow):
             self._fileMenu.setEnabled(True)
             self._viewMenu.setEnabled(True)
             self._imageMenu.setEnabled(True)
+            self._videoMenu.setEnabled(True)
 
             # Disable the reset zoom, rect related and undo actions
             self._resetZoomAction.setEnabled(False)
@@ -215,6 +233,7 @@ class MainWindow(QMainWindow):
             self._fileMenu.setEnabled(False)
             self._viewMenu.setEnabled(False)
             self._imageMenu.setEnabled(False)
+            self._videoMenu.setEnabled(False)
 
     def _fileModified(self, modified: bool) -> None:
         # Get the current window title
