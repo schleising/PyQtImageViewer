@@ -26,24 +26,29 @@ Plist = dict(
             CFBundleTypeExtensions=['jpeg','jpg'],
             CFBundleTypeName='JPEG image',
             CFBundleTypeRole='Viewer',
-            ),
+        ),
         dict(
             CFBundleTypeExtensions=['png'],
             CFBundleTypeName='PNG image',
             CFBundleTypeRole='Viewer',
-            ),
+        ),
         dict(
             CFBundleTypeExtensions=['gif'],
             CFBundleTypeName='GIF image',
             CFBundleTypeRole='Viewer',
-            ),
+        ),
         dict(
             CFBundleTypeExtensions=['webp'],
             CFBundleTypeName='WEBP image',
             CFBundleTypeRole='Viewer',
-            ),
-        ]
-    )
+        ),
+        dict(
+            CFBundleTypeExtensions=['mp4'],
+            CFBundleTypeName='MPEG4 video',
+            CFBundleTypeRole='Viewer',
+        ),
+    ]
+)
 
 OPTIONS = {
     'iconfile': 'ImageViewer/Resources/ImageViewer.icns',
