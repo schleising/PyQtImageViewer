@@ -11,7 +11,7 @@ MIN_WIDTH = START_WIDTH
 DODGER_BLUE = QColor(30, 144, 255, 255)
 DODGER_BLUE_50PC = QColor(30, 144, 255, 128)
 
-# List of supported extensions
+# List of supported image extensions
 IMAGE_EXTENSIONS = {
     'Graphics Interchange Format': '.gif',
     'JPG Image': '.jpg',
@@ -20,9 +20,11 @@ IMAGE_EXTENSIONS = {
     'WEBP': '.webp',
 }
 
+# List of supported video extensions
 VIDEO_EXTENSIONS = {
     'MP4': '.mp4',
     'MKV': '.mkv',
 }
 
+# Full list of supported extensions
 SUPPORTED_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
