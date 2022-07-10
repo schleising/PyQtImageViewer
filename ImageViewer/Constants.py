@@ -12,10 +12,17 @@ DODGER_BLUE = QColor(30, 144, 255, 255)
 DODGER_BLUE_50PC = QColor(30, 144, 255, 128)
 
 # List of supported extensions
-SUPPORTED_EXTENSIONS = {
+IMAGE_EXTENSIONS = {
     'Graphics Interchange Format': '.gif',
     'JPG Image': '.jpg',
     'JPEG Image': '.jpeg',
     'Portable Network Graphic': '.png',
     'WEBP': '.webp',
 }
+
+VIDEO_EXTENSIONS = {
+    'MP4': '.mp4',
+    'MKV': '.mkv',
+}
+
+SUPPORTED_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS

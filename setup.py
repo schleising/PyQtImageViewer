@@ -9,7 +9,14 @@ from setuptools import setup
 
 APP = ['main.py']
 DATA_FILES: list[tuple[str, list[str]]] = [
-    ('ImageViewer/Resources', ['ImageViewer/Resources/285658_blue_folder_icon.png', 'ImageViewer/Resources/Loading Icon.png']),
+    (
+        'ImageViewer/Resources',
+        [
+            'ImageViewer/Resources/285658_blue_folder_icon.png',
+            'ImageViewer/Resources/Loading Icon.png',
+            'ImageViewer/Resources/file-video1.png',
+        ]
+    ),
 ]
 
 # A custom plist for file associations

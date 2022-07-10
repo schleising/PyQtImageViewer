@@ -7,8 +7,10 @@ from PIL import Image
 from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
+from PySide6.QtMultimediaWidgets import QGraphicsVideoItem
+from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal, Slot
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
 from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
@@ -44,6 +46,9 @@ class FullImage(QGraphicsView):
 
         # A pixmap graphics item for the image
         self._pixmapGraphicsItem: Optional[QGraphicsPixmapItem] = None
+
+        # A Graphics Video Item for videos
+        self._graphicsVideoItem: Optional[QGraphicsVideoItem] = None
 
         # A graphics rect item for the selection rectangle
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
