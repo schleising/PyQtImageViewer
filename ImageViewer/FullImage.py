@@ -8,7 +8,7 @@ from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
 from PySide6.QtMultimediaWidgets import QGraphicsVideoItem
-from PySide6.QtMultimedia import QMediaPlayer
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
 from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
 
@@ -55,6 +55,9 @@ class FullImage(QGraphicsView):
         # The media player for video
         self._mediaPlayer: Optional[QMediaPlayer] = None
 
+        # Audio output for video
+        self._audioOutput: Optional[QAudioOutput] = None
+
         # A graphics rect item for the selection rectangle
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
@@ -96,6 +99,10 @@ class FullImage(QGraphicsView):
         # If there is a media player, remove it
         if self._mediaPlayer is not None:
             self._mediaPlayer = None
+
+        # If there is an audio outpit, remove it
+        if self._audioOutput is not None:
+            self._audioOutput = None
 
         # If a graphics rect exists, remove it and set to None
         if self._graphicsRectItem is not None:
@@ -148,11 +155,17 @@ class FullImage(QGraphicsView):
         # Create the media player
         self._mediaPlayer = QMediaPlayer()
 
+        # Create the audio output
+        self._audioOutput = QAudioOutput()
+
         # Create the graphics video item
         self._graphicsVideoItem = QGraphicsVideoItem()
 
-        # Set the output ofthe media player to be the graphics video item
+        # Set the output of the media player to be the graphics video item
         self._mediaPlayer.setVideoOutput(self._graphicsVideoItem)
+
+        # Set the audio output
+        self._mediaPlayer.setAudioOutput(self._audioOutput)
 
         # Add the graphics video item to the scene
         self._scene.addItem(self._graphicsVideoItem)
