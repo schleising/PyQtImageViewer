@@ -6,14 +6,23 @@ from typing import Any, Callable, Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsLineItem
 from PySide6.QtMultimediaWidgets import QGraphicsVideoItem
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal, QLineF, QTimer
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
-from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC, IMAGE_EXTENSIONS, VIDEO_SKIP_AMOUNT, AUDIO_ADJUST_AMOUNT
+from ImageViewer.Constants import (
+    ZOOM_SCALE_FACTOR,
+    DODGER_BLUE_50PC,
+    IMAGE_EXTENSIONS,
+    VIDEO_SKIP_AMOUNT,
+    AUDIO_ADJUST_AMOUNT,
+    VIDEO_UI_MARGIN,
+    VIDEO_POSITION_LINE_SIZE,
+    VIDEO_UI_TIMEOUT,
+)
 import ImageViewer.ImageTools as ImageTools
 from ImageViewer.SliderDialog import SliderDialog
 
@@ -55,6 +64,24 @@ class FullImage(QGraphicsView):
 
         # The media player for video
         self._mediaPlayer = QMediaPlayer()
+
+        # Connect the media player position changed signal
+        self._mediaPlayer.positionChanged.connect(self.VideoPositionChanged) # type: ignore
+
+        # Create a line item for the video duration
+        self._durationGraphicsLineItem: Optional[QGraphicsLineItem] = None
+
+        # Create a line item for the video position
+        self._positionGraphicsLineItem: Optional[QGraphicsLineItem] = None
+
+        # The video length
+        self._videoLength = 0
+
+        # The current time through the video
+        self._currentPosition = 0
+
+        # Timer to hide the video UI
+        self._videoUiTimer: Optional[QTimer] = None
 
         # Audio output for video
         self._audioOutput = QAudioOutput()
@@ -102,6 +129,27 @@ class FullImage(QGraphicsView):
         if self._graphicsVideoItem is not None:
             self._scene.removeItem(self._graphicsVideoItem)
             self._graphicsVideoItem = None
+
+        # If there is a duration line item remove it and set it to None
+        if self._durationGraphicsLineItem is not None:
+            self._scene.removeItem(self._durationGraphicsLineItem)
+            self._durationGraphicsLineItem = None
+
+        # If there is a position line item remove it and set it to None
+        if self._positionGraphicsLineItem is not None:
+            self._scene.removeItem(self._positionGraphicsLineItem)
+            self._positionGraphicsLineItem = None
+
+        # Reset the video length
+        self._videoLength = 0
+
+        # Reset the current position
+        self._currentPosition = 0
+
+        # Clear the Video UI Timer
+        if self._videoUiTimer is not None:
+            self._videoUiTimer.stop()
+            self._videoUiTimer = None
 
         # If a graphics rect exists, remove it and set to None
         if self._graphicsRectItem is not None:
@@ -172,6 +220,12 @@ class FullImage(QGraphicsView):
         # Connect the native size changed signal
         self._graphicsVideoItem.nativeSizeChanged.connect(self._videoSizeChanged)  # type: ignore
 
+        # Create the video UI Timer
+        self._videoUiTimer = QTimer()
+
+        # Connect the timeout signal to _videoUiTimerExpired
+        self._videoUiTimer.timeout.connect(self._videoUiTimerExpired) # type: ignore
+
         # Play the video
         self._mediaPlayer.play()
 
@@ -182,12 +236,15 @@ class FullImage(QGraphicsView):
         self.videoLoadedSignal.emit(True)
 
     def _videoSizeChanged(self) -> None:
-        if self._graphicsVideoItem is not None:
+        if self._graphicsVideoItem is not None and self._videoUiTimer is not None:
             # Now the size is known, set the scene rect
             self._scene.setSceneRect(self._graphicsVideoItem.boundingRect())
 
             # Reset the zoom to this rect
             self.ResetZoom()
+
+            # Start the timer
+            self._videoUiTimer.start(VIDEO_UI_TIMEOUT)
 
     def ZoomImage(self) -> None:
         #  Check there is a rectangle on the screen
@@ -486,6 +543,9 @@ class FullImage(QGraphicsView):
             # Centre on the original scene centre
             self.centerOn(self._oldSceneCentre)
 
+        # Redraw the video UI
+        self._drawVideoUi()
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
 
@@ -531,6 +591,16 @@ class FullImage(QGraphicsView):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
+
+        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Show the duration line
+            self._durationGraphicsLineItem.show()
+
+            # show the position line
+            self._positionGraphicsLineItem.show()
+
+            # Start the timer
+            self._videoUiTimer.start(VIDEO_UI_TIMEOUT)
 
         if self._startDragPoint is not None and self._ctrlHeld:
             if self._graphicsRectItem is not None:
@@ -619,9 +689,29 @@ class FullImage(QGraphicsView):
         # Jump ahead by the skip amount
         self._mediaPlayer.setPosition(self._mediaPlayer.position() + VIDEO_SKIP_AMOUNT)
 
+        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Show the duration line
+            self._durationGraphicsLineItem.show()
+
+            # show the position line
+            self._positionGraphicsLineItem.show()
+
+            # Start the timer
+            self._videoUiTimer.start(VIDEO_UI_TIMEOUT)
+
     def SkipBackwards(self) -> None:
         # Jump back by the skip amount
         self._mediaPlayer.setPosition(self._mediaPlayer.position() - VIDEO_SKIP_AMOUNT)
+
+        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Show the duration line
+            self._durationGraphicsLineItem.show()
+
+            # show the position line
+            self._positionGraphicsLineItem.show()
+
+            # Start the timer
+            self._videoUiTimer.start(VIDEO_UI_TIMEOUT)
 
     def IncreaseVolume(self) -> None:
         # Increase the volume by the adjust amount (clamped to 0 - 1)
@@ -640,3 +730,86 @@ class FullImage(QGraphicsView):
     def ToggleMute(self) -> None:
         # Toggle the muted state
         self._audioOutput.setMuted(not self._audioOutput.isMuted())
+
+    def VideoPositionChanged(self) -> None:
+        if self._durationGraphicsLineItem is None:
+            # Create the duration line and add it to the scene
+            self._durationGraphicsLineItem = QGraphicsLineItem()
+            self._scene.addItem(self._durationGraphicsLineItem)
+
+        if self._positionGraphicsLineItem is None:
+            # Create the position line and add it to the scene
+            self._positionGraphicsLineItem = QGraphicsLineItem()
+            self._scene.addItem(self._positionGraphicsLineItem)
+
+        # Get the video length
+        self._videoLength = self._mediaPlayer.duration()
+
+        # Get the current position
+        self._currentPosition = self._mediaPlayer.position()
+
+        # Draw the UI
+        self._drawVideoUi()
+
+    def _drawVideoUi(self) -> None:
+        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoLength > 0:
+            # Get the x start position of the duration line
+            xStart = VIDEO_UI_MARGIN
+
+            # Get the x end position of the duration line
+            xFinish = self.width() - VIDEO_UI_MARGIN
+
+            # Get the y position of the duration line
+            yPos = self.height() - VIDEO_UI_MARGIN
+
+            # Create the start and end points of the duration line in view coordinates
+            startPoint = QPoint(xStart, yPos)
+            endPoint = QPoint(xFinish, yPos)
+
+            # Create the start and end points of the duration line in scene coordinates
+            sceneStartPoint = self.mapToScene(startPoint)
+            sceneEndPoint = self.mapToScene(endPoint)
+
+            # Create the duration line
+            durationLine = QLineF(sceneStartPoint, sceneEndPoint)
+
+            # Get the x position of the position line
+            positionXPos = int(((xFinish - xStart) * (self._currentPosition / self._videoLength)) + xStart)
+
+            # Get the starting y position of the position line
+            positionYStart = yPos - VIDEO_POSITION_LINE_SIZE
+
+            # Get the ending y position of the position line
+            positionYEnd = yPos + VIDEO_POSITION_LINE_SIZE
+
+            # Create the position start and end points in view coordinations
+            positionStartPoint = QPoint(positionXPos, positionYStart)
+            positionEndPoint = QPoint(positionXPos, positionYEnd)
+
+            # Create the position start and end points in scene coordinations
+            scenePositionStartPoint = self.mapToScene(positionStartPoint)
+            scenePositionEndPoint = self.mapToScene(positionEndPoint)
+
+            # Create the position line
+            positionLine = QLineF(scenePositionStartPoint, scenePositionEndPoint)
+
+            # Set the duration graphics line item
+            self._durationGraphicsLineItem.setLine(durationLine)
+
+            # Set the line to blue
+            self._durationGraphicsLineItem.setPen(DODGER_BLUE_50PC)
+
+            # Set the position graphics line item
+            self._positionGraphicsLineItem.setLine(positionLine)
+
+            # Set the line to blue
+            self._positionGraphicsLineItem.setPen(DODGER_BLUE_50PC)
+
+    def _videoUiTimerExpired(self) -> None:
+        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Hide the video UI
+            self._durationGraphicsLineItem.hide()
+            self._positionGraphicsLineItem.hide()
+
+            # Stop the timer to ensure it doesn't fire again
+            self._videoUiTimer.stop()

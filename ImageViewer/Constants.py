@@ -33,3 +33,12 @@ VIDEO_SKIP_AMOUNT = 5000
 
 # Amount to adjust audio volume by
 AUDIO_ADJUST_AMOUNT = 0.1
+
+# Video UI margin
+VIDEO_UI_MARGIN = 100
+
+# Video position line size
+VIDEO_POSITION_LINE_SIZE = 10
+
+# Video UI Timeout
+VIDEO_UI_TIMEOUT = 500
