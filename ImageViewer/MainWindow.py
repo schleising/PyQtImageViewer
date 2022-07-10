@@ -132,43 +132,64 @@ class MainWindow(QMainWindow):
         self._viewMenu.addAction('Next', QKeySequence(Qt.Key.Key_Right), self._nextImage)
         self._viewMenu.addAction('Previous', QKeySequence(Qt.Key.Key_Left), self._prevImage)
         self._viewMenu.addSeparator()
-        self._viewMenu.addAction('Adjust Image', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_A), self._fullSizeImage._openAdjustDialog)
+        self._adjustImageAction = cast(QAction, self._viewMenu.addAction('Adjust Image', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_A), self._fullSizeImage._openAdjustDialog))
         self._viewMenu.addSeparator()
         self._zoomAction = cast(QAction, self._viewMenu.addAction('Zoom to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_Z), self._fullSizeImage.ZoomImage))
         self._resetZoomAction = cast(QAction, self._viewMenu.addAction('Reset Zoom', QKeySequence(Qt.Modifier.META | Qt.Key.Key_R), self._fullSizeImage.ResetZoom))
         self._viewMenu.addSeparator()
-        self._viewMenu.addAction('Image Information', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_I), self._fullSizeImage.ImageInfo)
+        self._imageInfoAction = cast(QAction, self._viewMenu.addAction('Image Information', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_I), self._fullSizeImage.ImageInfo))
 
         # Add the actions to the image menu
         self._cropAction = cast(QAction, self._imageMenu.addAction('Crop to Rect', QKeySequence(Qt.Modifier.META | Qt.Key.Key_C), self._fullSizeImage.CropImage))
         self._imageMenu.addSeparator()
-        self._imageMenu.addAction('Increase Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseColour)
-        self._imageMenu.addAction('Decrease Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseColour)
-        self._imageMenu.addAction('Increase Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseContrast)
-        self._imageMenu.addAction('Decrease Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseContrast)
-        self._imageMenu.addAction('Increase Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Right), self._fullSizeImage.IncreaseBrightness)
-        self._imageMenu.addAction('Decrease Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Left), self._fullSizeImage.DecreaseBrightness)
-        self._imageMenu.addAction('Black and White', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_W), self._fullSizeImage.BlackAndWhite)
+        self._increaseColourAction = cast(QAction, self._imageMenu.addAction('Increase Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseColour))
+        self._decreaseColourAction = cast(QAction, self._imageMenu.addAction('Decrease Colour', QKeySequence(Qt.Modifier.SHIFT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseColour))
+        self._increaseContrastAction = cast(QAction, self._imageMenu.addAction('Increase Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Right), self._fullSizeImage.IncreaseContrast))
+        self._decreaseContrastAction = cast(QAction, self._imageMenu.addAction('Decrease Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_Left), self._fullSizeImage.DecreaseContrast))
+        self._increaseBrightnessAction = cast(QAction, self._imageMenu.addAction('Increase Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Right), self._fullSizeImage.IncreaseBrightness))
+        self._decreaseBrightnessAction = cast(QAction, self._imageMenu.addAction('Decrease Brightness', QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Left), self._fullSizeImage.DecreaseBrightness))
+        self._blackAndWhite = cast(QAction, self._imageMenu.addAction('Black and White', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_W), self._fullSizeImage.BlackAndWhite))
         self._imageMenu.addSeparator()
-        self._imageMenu.addAction('Sharpen', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S), self._fullSizeImage.Sharpen)
-        self._imageMenu.addAction('Blur', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_B), self._fullSizeImage.Blur)
-        self._imageMenu.addAction('Contour', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_C), self._fullSizeImage.Contour)
-        self._imageMenu.addAction('Detail', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D), self._fullSizeImage.Detail)
-        self._imageMenu.addAction('Edge Enhance', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E), self._fullSizeImage.EdgeEnhance)
-        self._imageMenu.addAction('Emboss', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M), self._fullSizeImage.Emboss)
-        self._imageMenu.addAction('Find Edges', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_F), self._fullSizeImage.FindEdges)
-        self._imageMenu.addAction('Smooth', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O), self._fullSizeImage.Smooth)
-        self._imageMenu.addAction('Unsharp Mask', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U), self._fullSizeImage.UnsharpMask)
-        self._imageMenu.addAction('Auto Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A), self._fullSizeImage.AutoContrast)
+        self._sharpenAction = cast(QAction, self._imageMenu.addAction('Sharpen', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_S), self._fullSizeImage.Sharpen))
+        self._blurAction = cast(QAction, self._imageMenu.addAction('Blur', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_B), self._fullSizeImage.Blur))
+        self._contourAction = cast(QAction, self._imageMenu.addAction('Contour', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_C), self._fullSizeImage.Contour))
+        self._detailAction = cast(QAction, self._imageMenu.addAction('Detail', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_D), self._fullSizeImage.Detail))
+        self._edgeEnhanceAction = cast(QAction, self._imageMenu.addAction('Edge Enhance', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_E), self._fullSizeImage.EdgeEnhance))
+        self._embossAction = cast(QAction, self._imageMenu.addAction('Emboss', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_M), self._fullSizeImage.Emboss))
+        self._findEdgesAction = cast(QAction, self._imageMenu.addAction('Find Edges', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_F), self._fullSizeImage.FindEdges))
+        self._smoothAction = cast(QAction, self._imageMenu.addAction('Smooth', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_O), self._fullSizeImage.Smooth))
+        self._unsharpMaskAction = cast(QAction, self._imageMenu.addAction('Unsharp Mask', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_U), self._fullSizeImage.UnsharpMask))
+        self._autoContrastAction = cast(QAction, self._imageMenu.addAction('Auto Contrast', QKeySequence(Qt.Modifier.ALT | Qt.Key.Key_A), self._fullSizeImage.AutoContrast))
         self._imageMenu.addSeparator()
         self._undoAction = cast(QAction, self._imageMenu.addAction('Undo', QKeySequence.Undo, self._fullSizeImage.UndoLastChange))
 
         # Connect the signals to the QAction.setEnabled() slots
         self._fullSizeImage.resetZoomEnableSignal.connect(self._resetZoomAction.setEnabled)
-        self._fullSizeImage.rectPresentSignal.connect(self._zoomAction.setEnabled)
-        self._fullSizeImage.rectPresentSignal.connect(self._cropAction.setEnabled)
+        self._fullSizeImage.canZoomToRectSignal.connect(self._zoomAction.setEnabled)
+        self._fullSizeImage.canCropToRectSignal.connect(self._cropAction.setEnabled)
         self._fullSizeImage.imageModifiedSignal.connect(self._saveAction.setEnabled)
         self._fullSizeImage.imageModifiedSignal.connect(self._undoAction.setEnabled)
+
+        # Connect signals to disable menu items if a video is loaded rather than an image
+        self._fullSizeImage.imageLoadedSignal.connect(self._adjustImageAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._imageInfoAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._increaseColourAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._decreaseColourAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._increaseContrastAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._decreaseContrastAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._increaseBrightnessAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._decreaseBrightnessAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._blackAndWhite.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._sharpenAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._blurAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._contourAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._detailAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._edgeEnhanceAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._embossAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._findEdgesAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._smoothAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._unsharpMaskAction.setEnabled)
+        self._fullSizeImage.imageLoadedSignal.connect(self._autoContrastAction.setEnabled)
 
         # Connect the image modified signal to the _fileModified function
         self._fullSizeImage.imageModifiedSignal.connect(self._fileModified)
@@ -369,17 +390,17 @@ class MainWindow(QMainWindow):
         self._currentImageIndex = self._imageList.index(imagePath)
 
     def _MaximiseImage(self, imagePath: Path) -> None:
+        # Log that we are in maximised image mode
+        self._imageMaximised = True
+
+        # Enable the previous and next image actions
+        self._updateMenu()
+
         # View already created, it just needs reinitialisation with the new path
         self._fullSizeImage.InitialiseView(imagePath)
 
         # Swap the stack to this widget
         self._stack.setCurrentWidget(self._fullSizeImage)
-
-        # Log that we are in maximaised image mode
-        self._imageMaximised = True
-
-        # Enable the previous and next image actions
-        self._updateMenu()
 
         # Set the window title to folder - filename
         self.setWindowTitle(f'{self._currentPath.stem} - {imagePath.stem}')

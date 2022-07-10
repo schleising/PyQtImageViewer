@@ -20,8 +20,10 @@ from ImageViewer.SliderDialog import SliderDialog
 class FullImage(QGraphicsView):
     # Signals to enable and disable menu items
     resetZoomEnableSignal = Signal(bool)
-    rectPresentSignal = Signal(bool)
+    canZoomToRectSignal = Signal(bool)
+    canCropToRectSignal = Signal(bool)
     imageModifiedSignal = Signal(bool)
+    imageLoadedSignal = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -101,7 +103,8 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
             # Signal the menu item to be disabled
-            self.rectPresentSignal.emit(False)
+            self.canZoomToRectSignal.emit(False)
+            self.canCropToRectSignal.emit(False)
 
         # Boolean indicating whether a change to the image can be saved
         self._imageCanBeSaved = False
@@ -138,6 +141,9 @@ class FullImage(QGraphicsView):
         # Reset the zoom
         self.ResetZoom()
 
+        # Signal that an image has been loaded
+        self.imageLoadedSignal.emit(True)
+
     def _LoadVideo(self) -> None:
         # Create the media player
         self._mediaPlayer = QMediaPlayer()
@@ -163,6 +169,9 @@ class FullImage(QGraphicsView):
         # Play the video
         self._mediaPlayer.play()
 
+        # Signal that an image has not been loaded
+        self.imageLoadedSignal.emit(False)
+
     def _videoSizeChanged(self) -> None:
         if self._graphicsVideoItem is not None:
             # Now the size is known, set the scene rect
@@ -184,7 +193,8 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem = None
 
             # Signal the menu item to be disabled
-            self.rectPresentSignal.emit(False)
+            self.canZoomToRectSignal.emit(False)
+            self.canCropToRectSignal.emit(False)
 
             # Indicate that we are zoomed
             self._zoomed = True
@@ -216,8 +226,9 @@ class FullImage(QGraphicsView):
                 # Set the rect to None
                 self._graphicsRectItem = None
 
-            # Signal the menu item to be disabled
-                self.rectPresentSignal.emit(False)
+                # Signal the menu item to be disabled
+                self.canZoomToRectSignal.emit(False)
+                self.canCropToRectSignal.emit(False)
     
             # Convert the pillow image into a QImage
             if adjstedImage is None:
@@ -506,7 +517,8 @@ class FullImage(QGraphicsView):
                 self._graphicsRectItem = None
 
                 # Signal the menu item to be disabled
-                self.rectPresentSignal.emit(False)
+                self.canZoomToRectSignal.emit(False)
+                self.canCropToRectSignal.emit(False)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
@@ -545,7 +557,13 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem.setBrush(DODGER_BLUE_50PC)
 
             # Signal the menu item to be enabled
-            self.rectPresentSignal.emit(True)
+            self.canZoomToRectSignal.emit(True)
+
+            # Only enable crop for images
+            if self._pixmapGraphicsItem is not None:
+                self.canCropToRectSignal.emit(True)
+            else:
+                self.canCropToRectSignal.emit(False)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
