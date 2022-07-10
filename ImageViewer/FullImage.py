@@ -13,7 +13,7 @@ from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyE
 from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
-from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC, IMAGE_EXTENSIONS
+from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC, IMAGE_EXTENSIONS, VIDEO_SKIP_AMOUNT, AUDIO_ADJUST_AMOUNT
 import ImageViewer.ImageTools as ImageTools
 from ImageViewer.SliderDialog import SliderDialog
 
@@ -24,6 +24,7 @@ class FullImage(QGraphicsView):
     canCropToRectSignal = Signal(bool)
     imageModifiedSignal = Signal(bool)
     imageLoadedSignal = Signal(bool)
+    videoLoadedSignal = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -53,10 +54,13 @@ class FullImage(QGraphicsView):
         self._graphicsVideoItem: Optional[QGraphicsVideoItem] = None
 
         # The media player for video
-        self._mediaPlayer: Optional[QMediaPlayer] = None
+        self._mediaPlayer = QMediaPlayer()
 
         # Audio output for video
-        self._audioOutput: Optional[QAudioOutput] = None
+        self._audioOutput = QAudioOutput()
+
+        # Set the audio output for the media player
+        self._mediaPlayer.setAudioOutput(self._audioOutput)
 
         # A graphics rect item for the selection rectangle
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
@@ -70,6 +74,9 @@ class FullImage(QGraphicsView):
     def InitialiseView(self, imagePath:Path) -> None:
         # Set the image path
         self._imagePath = imagePath
+
+        # Stop any playing media
+        self._mediaPlayer.stop()
 
         # Indicate whether we have zoomed in at all
         self.ResetZoom()
@@ -95,14 +102,6 @@ class FullImage(QGraphicsView):
         if self._graphicsVideoItem is not None:
             self._scene.removeItem(self._graphicsVideoItem)
             self._graphicsVideoItem = None
-
-        # If there is a media player, remove it
-        if self._mediaPlayer is not None:
-            self._mediaPlayer = None
-
-        # If there is an audio outpit, remove it
-        if self._audioOutput is not None:
-            self._audioOutput = None
 
         # If a graphics rect exists, remove it and set to None
         if self._graphicsRectItem is not None:
@@ -151,21 +150,15 @@ class FullImage(QGraphicsView):
         # Signal that an image has been loaded
         self.imageLoadedSignal.emit(True)
 
+        # Signal that a video is not loaded
+        self.videoLoadedSignal.emit(False)
+
     def _LoadVideo(self) -> None:
-        # Create the media player
-        self._mediaPlayer = QMediaPlayer()
-
-        # Create the audio output
-        self._audioOutput = QAudioOutput()
-
         # Create the graphics video item
         self._graphicsVideoItem = QGraphicsVideoItem()
 
         # Set the output of the media player to be the graphics video item
         self._mediaPlayer.setVideoOutput(self._graphicsVideoItem)
-
-        # Set the audio output
-        self._mediaPlayer.setAudioOutput(self._audioOutput)
 
         # Add the graphics video item to the scene
         self._scene.addItem(self._graphicsVideoItem)
@@ -184,6 +177,9 @@ class FullImage(QGraphicsView):
 
         # Signal that an image has not been loaded
         self.imageLoadedSignal.emit(False)
+
+        # Signal that a video is loaded
+        self.videoLoadedSignal.emit(True)
 
     def _videoSizeChanged(self) -> None:
         if self._graphicsVideoItem is not None:
@@ -608,7 +604,39 @@ class FullImage(QGraphicsView):
         self._oldSceneCentre = self.mapToScene(self.rect().center())
 
     def ReturnToBrowser(self) -> None:
-        # If there is a video playing, stop it
-        if self._mediaPlayer is not None:
-            # Stop the video
-            self._mediaPlayer.stop()
+        # Stop the video
+        self._mediaPlayer.stop()
+
+    def PlayPause(self) -> None:
+        if self._mediaPlayer.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            # If the video is playing, pause it
+            self._mediaPlayer.pause()
+        elif self._mediaPlayer.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+            # If the video is paused, play it
+            self._mediaPlayer.play()
+
+    def SkipForwards(self) -> None:
+        # Jump ahead by the skip amount
+        self._mediaPlayer.setPosition(self._mediaPlayer.position() + VIDEO_SKIP_AMOUNT)
+
+    def SkipBackwards(self) -> None:
+        # Jump back by the skip amount
+        self._mediaPlayer.setPosition(self._mediaPlayer.position() - VIDEO_SKIP_AMOUNT)
+
+    def IncreaseVolume(self) -> None:
+        # Increase the volume by the adjust amount (clamped to 0 - 1)
+        self._audioOutput.setVolume(self._audioOutput.volume() + AUDIO_ADJUST_AMOUNT)
+
+        # Re-enable audio if muted
+        self._audioOutput.setMuted(False)
+
+    def DecreaseVolume(self) -> None:
+        # Decrease the volume by the adjust amount (clamped to 0 - 1)
+        self._audioOutput.setVolume(self._audioOutput.volume() - AUDIO_ADJUST_AMOUNT)
+
+        # Re-enable audio if muted
+        self._audioOutput.setMuted(False)
+
+    def ToggleMute(self) -> None:
+        # Toggle the muted state
+        self._audioOutput.setMuted(not self._audioOutput.isMuted())
