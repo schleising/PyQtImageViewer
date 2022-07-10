@@ -26,7 +26,7 @@ from PIL.ImageQt import ImageQt
 # This seems to be necessary to ensure webp images can be loaded at startup
 import PIL.WebPImagePlugin as _
 
-from ImageViewer.Constants import DODGER_BLUE, DODGER_BLUE_50PC
+from ImageViewer.Constants import DODGER_BLUE, DODGER_BLUE_50PC, VIDEO_EXTENSIONS
 
 class PixmapLabel(QLabel):
     def __init__(self):
@@ -86,11 +86,17 @@ class Thumbnail(QWidget):
     # Default folder image
     _folderImagePath = 'ImageViewer/Resources/285658_blue_folder_icon.png'
 
+    # Default Video Image
+    _videoImagePath = 'ImageViewer/Resources/file-video1.png'
+
     # QPixmap for default loading image
     _defaultImage: Optional[QPixmap] = None
 
     # ImageQt for folder image
     _folderImage: Optional[ImageQt] = None
+
+    # QPixmap for video image
+    _videoImage: Optional[QPixmap] = None
 
     # Threads for loading the images
     _executor = ThreadPoolExecutor()
@@ -168,6 +174,15 @@ class Thumbnail(QWidget):
             # Scale the pixmap to the thumbnail size
             cls._defaultImage = defaultPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
 
+            # Read in the default image, using Pillow as it is quicker, and convert to a QPixmap
+            pilImage = Image.open(cls._videoImagePath)
+            qtImage = ImageQt(pilImage)
+            defaultPixmap = QPixmap()
+            defaultPixmap.convertFromImage(qtImage)
+
+            # Scale the pixmap to the thumbnail size
+            cls._videoImage = defaultPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
+
             # Read in the folder image, using Pillow as it is quicker, and convert to a QPixmap
             pilImage = Image.open(cls._folderImagePath)
             cls._folderImage = ImageQt(pilImage)
@@ -225,27 +240,31 @@ class Thumbnail(QWidget):
 
     def SetDefaultImage(self) -> None:
         if self.ImagePath.is_file():
-            if self._defaultImage:
-                # if this is a file, set the default loading image for now
-                self._thumbnailImage.setPixmap(self._defaultImage)
+            if self._defaultImage and self._videoImage:
+                if self.ImagePath.suffix in VIDEO_EXTENSIONS.values():
+                    # if this is a file, set the default loading image for now
+                    self._thumbnailImage.setPixmap(self._videoImage)
+                else:
+                    # if this is a file, set the default loading image for now
+                    self._thumbnailImage.setPixmap(self._defaultImage)
+
+                    # Get an opacity effect
+                    opacityEffect = QGraphicsOpacityEffect(self)
+
+                    # Set the opacity to 20%
+                    opacityEffect.setOpacity(0.2)
+
+                    # Add this effect to the widget
+                    self.setGraphicsEffect(opacityEffect)
+
+                    # Connect the signal for the image load complete message
+                    self.loaded.connect(self.ImageLoaded)
+
+                    # Initiate the load of the actual image in another thread
+                    self._LoadImage()
 
                 # Ensure the pixmap is aligned in the centre
                 self._thumbnailImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-                # Get an opacity effect
-                opacityEffect = QGraphicsOpacityEffect(self)
-
-                # Set the opacity to 20%
-                opacityEffect.setOpacity(0.2)
-
-                # Add this effect to the widget
-                self.setGraphicsEffect(opacityEffect)
-
-                # Connect the signal for the image load complete message
-                self.loaded.connect(self.ImageLoaded)
-
-                # Initiate the load of the actual image in another thread
-                self._LoadImage()
         else:
             if self._folderImage:
                 # if this is a folder, set the folder image

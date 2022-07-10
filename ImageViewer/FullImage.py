@@ -7,19 +7,23 @@ from PIL import Image
 from PIL.ImageQt import ImageQt
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem
+from PySide6.QtMultimediaWidgets import QGraphicsVideoItem
+from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal, Slot
+from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
-from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC
+from ImageViewer.Constants import ZOOM_SCALE_FACTOR, DODGER_BLUE_50PC, IMAGE_EXTENSIONS
 import ImageViewer.ImageTools as ImageTools
 from ImageViewer.SliderDialog import SliderDialog
 
 class FullImage(QGraphicsView):
     # Signals to enable and disable menu items
     resetZoomEnableSignal = Signal(bool)
-    rectPresentSignal = Signal(bool)
+    canZoomToRectSignal = Signal(bool)
+    canCropToRectSignal = Signal(bool)
     imageModifiedSignal = Signal(bool)
+    imageLoadedSignal = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -44,6 +48,12 @@ class FullImage(QGraphicsView):
 
         # A pixmap graphics item for the image
         self._pixmapGraphicsItem: Optional[QGraphicsPixmapItem] = None
+
+        # A Graphics Video Item for videos
+        self._graphicsVideoItem: Optional[QGraphicsVideoItem] = None
+
+        # The media player for video
+        self._mediaPlayer: Optional[QMediaPlayer] = None
 
         # A graphics rect item for the selection rectangle
         self._graphicsRectItem: Optional[QGraphicsRectItem] = None
@@ -73,19 +83,38 @@ class FullImage(QGraphicsView):
         # A list containing the last n versions of this image
         self._undoBuffer: list[Image.Image] = []
 
+        # If there is an old pixmap, remove it and set it to None
+        if self._pixmapGraphicsItem is not None:
+            self._scene.removeItem(self._pixmapGraphicsItem)
+            self._pixmapGraphicsItem = None
+
+        # If there is an old Graphic Video Item, remove it and set it to None
+        if self._graphicsVideoItem is not None:
+            self._scene.removeItem(self._graphicsVideoItem)
+            self._graphicsVideoItem = None
+
+        # If there is a media player, remove it
+        if self._mediaPlayer is not None:
+            self._mediaPlayer = None
+
         # If a graphics rect exists, remove it and set to None
         if self._graphicsRectItem is not None:
             self._scene.removeItem(self._graphicsRectItem)
             self._graphicsRectItem: Optional[QGraphicsRectItem] = None
 
             # Signal the menu item to be disabled
-            self.rectPresentSignal.emit(False)
+            self.canZoomToRectSignal.emit(False)
+            self.canCropToRectSignal.emit(False)
 
         # Boolean indicating whether a change to the image can be saved
         self._imageCanBeSaved = False
 
-        # Load the image, convert it to a pixmap and add it to the scene
-        self._LoadPixmap()
+        if self._imagePath.suffix in IMAGE_EXTENSIONS.values():
+            # Load the image, convert it to a pixmap and add it to the scene
+            self._LoadPixmap()
+        else:
+            # Load the video and add it to the scene
+            self._LoadVideo()
 
     def _LoadPixmap(self) -> None:
         # Use Pillow to open the image and convert to a QPixmap
@@ -97,15 +126,13 @@ class FullImage(QGraphicsView):
         # Convert the QImage to a Pixmap
         self._pixmap.convertFromImage(qtImage)
 
-        # If there is an old pixmap, remove it and set it to None
-        if self._pixmapGraphicsItem is not None:
-            self._scene.removeItem(self._pixmapGraphicsItem)
-            self._pixmapGraphicsItem = None
-
-        # Add the pixmap to the scene and return the QGraphicsPixmapItem
+        # Get the QGraphicsPixmapItem
         self._pixmapGraphicsItem = QGraphicsPixmapItem(self._pixmap)
+
+        # Add the pixmap graphics item to the scene
         self._scene.addItem(self._pixmapGraphicsItem)
 
+        # Set the scene rect to the bounding rect of the pixmap
         self._scene.setSceneRect(self._pixmapGraphicsItem.boundingRect())
 
         # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
@@ -113,6 +140,45 @@ class FullImage(QGraphicsView):
 
         # Reset the zoom
         self.ResetZoom()
+
+        # Signal that an image has been loaded
+        self.imageLoadedSignal.emit(True)
+
+    def _LoadVideo(self) -> None:
+        # Create the media player
+        self._mediaPlayer = QMediaPlayer()
+
+        # Create the graphics video item
+        self._graphicsVideoItem = QGraphicsVideoItem()
+
+        # Set the output ofthe media player to be the graphics video item
+        self._mediaPlayer.setVideoOutput(self._graphicsVideoItem)
+
+        # Add the graphics video item to the scene
+        self._scene.addItem(self._graphicsVideoItem)
+
+        # Set the source file for the media player
+        self._mediaPlayer.setSource(self._imagePath.as_posix())
+
+        # Set the media player to loop infinitely
+        self._mediaPlayer.setLoops(QMediaPlayer.Infinite)
+
+        # Connect the native size changed signal
+        self._graphicsVideoItem.nativeSizeChanged.connect(self._videoSizeChanged)  # type: ignore
+
+        # Play the video
+        self._mediaPlayer.play()
+
+        # Signal that an image has not been loaded
+        self.imageLoadedSignal.emit(False)
+
+    def _videoSizeChanged(self) -> None:
+        if self._graphicsVideoItem is not None:
+            # Now the size is known, set the scene rect
+            self._scene.setSceneRect(self._graphicsVideoItem.boundingRect())
+
+            # Reset the zoom to this rect
+            self.ResetZoom()
 
     def ZoomImage(self) -> None:
         #  Check there is a rectangle on the screen
@@ -127,7 +193,8 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem = None
 
             # Signal the menu item to be disabled
-            self.rectPresentSignal.emit(False)
+            self.canZoomToRectSignal.emit(False)
+            self.canCropToRectSignal.emit(False)
 
             # Indicate that we are zoomed
             self._zoomed = True
@@ -140,11 +207,15 @@ class FullImage(QGraphicsView):
             # Reset the zoom so the whole image is visible in the window
             self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
 
-            # We are no longer zoomed
-            self._zoomed = False
+        elif self._graphicsVideoItem:
+            # Reset the zoom so the whole image is visible in the window
+            self.fitInView(self._graphicsVideoItem, Qt.AspectRatioMode.KeepAspectRatio)
 
-            # Signal the menu item to be disabled
-            self.resetZoomEnableSignal.emit(False)
+        # We are no longer zoomed
+        self._zoomed = False
+
+        # Signal the menu item to be disabled
+        self.resetZoomEnableSignal.emit(False)
 
     def UpdatePixmap(self, adjstedImage: Optional[Image.Image] = None) -> None:
         if self._pilImage is not None:
@@ -155,8 +226,9 @@ class FullImage(QGraphicsView):
                 # Set the rect to None
                 self._graphicsRectItem = None
 
-            # Signal the menu item to be disabled
-                self.rectPresentSignal.emit(False)
+                # Signal the menu item to be disabled
+                self.canZoomToRectSignal.emit(False)
+                self.canCropToRectSignal.emit(False)
     
             # Convert the pillow image into a QImage
             if adjstedImage is None:
@@ -396,9 +468,11 @@ class FullImage(QGraphicsView):
         super().resizeEvent(a0)
 
         if not self._zoomed:
-            # Ensure the image fits into the window if itis not already zoomed
+            # Ensure the image or video fits into the window if it is not already zoomed
             if self._pixmapGraphicsItem is not None:
                 self.fitInView(self._pixmapGraphicsItem, Qt.AspectRatioMode.KeepAspectRatio)
+            elif self._graphicsVideoItem is not None:
+                self.fitInView(self._graphicsVideoItem, Qt.AspectRatioMode.KeepAspectRatio)
         else:
             # Centre on the original scene centre
             self.centerOn(self._oldSceneCentre)
@@ -443,7 +517,8 @@ class FullImage(QGraphicsView):
                 self._graphicsRectItem = None
 
                 # Signal the menu item to be disabled
-                self.rectPresentSignal.emit(False)
+                self.canZoomToRectSignal.emit(False)
+                self.canCropToRectSignal.emit(False)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
@@ -482,7 +557,13 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem.setBrush(DODGER_BLUE_50PC)
 
             # Signal the menu item to be enabled
-            self.rectPresentSignal.emit(True)
+            self.canZoomToRectSignal.emit(True)
+
+            # Only enable crop for images
+            if self._pixmapGraphicsItem is not None:
+                self.canCropToRectSignal.emit(True)
+            else:
+                self.canCropToRectSignal.emit(False)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
