@@ -95,8 +95,8 @@ class Thumbnail(QWidget):
     # ImageQt for folder image
     _folderImage: Optional[ImageQt] = None
 
-    # QPixmap for video image
-    _videoImage: Optional[QPixmap] = None
+    # ImageQt for video image
+    _videoImage: Optional[ImageQt] = None
 
     # Threads for loading the images
     _executor = ThreadPoolExecutor()
@@ -174,16 +174,11 @@ class Thumbnail(QWidget):
             # Scale the pixmap to the thumbnail size
             cls._defaultImage = defaultPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
 
-            # Read in the default image, using Pillow as it is quicker, and convert to a QPixmap
+            # Read in the default image, using Pillow as it is quicker, and convert to an ImageQt
             pilImage = Image.open(cls._videoImagePath)
-            qtImage = ImageQt(pilImage)
-            defaultPixmap = QPixmap()
-            defaultPixmap.convertFromImage(qtImage)
+            cls._videoImage = ImageQt(pilImage)
 
-            # Scale the pixmap to the thumbnail size
-            cls._videoImage = defaultPixmap.scaled(cls._thumbnailSize, cls._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
-
-            # Read in the folder image, using Pillow as it is quicker, and convert to a QPixmap
+            # Read in the folder image, using Pillow as it is quicker, and convert to an ImageQt
             pilImage = Image.open(cls._folderImagePath)
             cls._folderImage = ImageQt(pilImage)
 
@@ -242,8 +237,18 @@ class Thumbnail(QWidget):
         if self.ImagePath.is_file():
             if self._defaultImage and self._videoImage:
                 if self.ImagePath.suffix in VIDEO_EXTENSIONS.values():
-                    # if this is a file, set the default loading image for now
-                    self._thumbnailImage.setPixmap(self._videoImage)
+                    # if this is a folder, set the folder image
+                    videoPixmap = QPixmap()
+                    videoPixmap.convertFromImage(self._videoImage)
+
+                    # Scale the pixmap to the thumbnail size
+                    currentVideoImage = videoPixmap.scaled(self._thumbnailSize, self._thumbnailSize, aspectMode=Qt.AspectRatioMode.KeepAspectRatio)
+
+                    # Set the folder image as the current pixmap
+                    self._thumbnailImage.setPixmap(currentVideoImage)
+
+                    # Set the folder image as the current image
+                    self._currentImage = currentVideoImage
                 else:
                     # if this is a file, set the default loading image for now
                     self._thumbnailImage.setPixmap(self._defaultImage)
@@ -333,7 +338,10 @@ class Thumbnail(QWidget):
             if self._qtImage:
                 # Convert the Qt Image into a QPixmap
                 pixmap.convertFromImage(self._qtImage)
-            elif self._folderImage:
+            elif self.ImagePath.is_file() and self._videoImage:
+                # Convert the Qt Image into a QPixmap
+                pixmap.convertFromImage(self._videoImage)
+            elif self.ImagePath.is_dir() and self._folderImage:
                 # Convert the Qt Image into a QPixmap
                 pixmap.convertFromImage(self._folderImage)
 
