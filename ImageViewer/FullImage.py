@@ -6,11 +6,20 @@ from typing import Any, Callable, Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsLineItem, QGraphicsPolygonItem
+from PySide6.QtWidgets import (
+    QGraphicsScene,
+    QGraphicsView,
+    QGraphicsItem,
+    QGraphicsPixmapItem,
+    QGraphicsRectItem,
+    QGraphicsLineItem,
+    QGraphicsPolygonItem,
+    QGraphicsSceneMouseEvent,
+)
 from PySide6.QtMultimediaWidgets import QGraphicsVideoItem
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QRectF, Signal, QLineF, QTimer
+from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QRectF, Signal, QLineF, QTimer, QObject
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
 from ImageViewer.Constants import (
@@ -25,6 +34,34 @@ from ImageViewer.Constants import (
 )
 import ImageViewer.ImageTools as ImageTools
 from ImageViewer.SliderDialog import SliderDialog
+
+class PolygonSignaller(QObject):
+    durationJumpSignal = Signal(float)
+
+class DurationPolygonItem(QGraphicsPolygonItem):
+    def __init__(self, parent: Optional[QGraphicsItem] = None):
+        super().__init__(parent)
+        self.signaller = PolygonSignaller()
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        super().mousePressEvent(event)
+
+        # Check the left button was pressed
+        if event.button() == Qt.LeftButton:
+            # Calculate the minimum x of the bounding rect
+            minX = self.boundingRect().left()
+
+            # Get the width of the bounding rect
+            width = self.boundingRect().width()
+
+            # Work out the xpos within the duration bar
+            xPos = event.buttonDownPos(Qt.LeftButton).x() - minX
+
+            # Work out how far through the duration bar this is
+            percentage = xPos / width
+
+            # Send the duration jump signal
+            self.signaller.durationJumpSignal.emit(percentage)
 
 class FullImage(QGraphicsView):
     # Signals to enable and disable menu items
@@ -69,7 +106,7 @@ class FullImage(QGraphicsView):
         self._mediaPlayer.positionChanged.connect(self.VideoPositionChanged) # type: ignore
 
         # Create a polygon item for the video duration
-        self._durationGraphicsPolygonItem: Optional[QGraphicsPolygonItem] = None
+        self._durationGraphicsPolygonItem: Optional[DurationPolygonItem] = None
 
         # Create a line item for the video position
         self._positionGraphicsLineItem: Optional[QGraphicsLineItem] = None
@@ -713,6 +750,10 @@ class FullImage(QGraphicsView):
             # Start the timer
             self._videoUiTimer.start(VIDEO_UI_TIMEOUT)
 
+    def _positionJump(self, newPosition: float) -> None:
+        # Jump to the new position
+        self._mediaPlayer.setPosition(int(self._mediaPlayer.duration() * newPosition))
+
     def IncreaseVolume(self) -> None:
         # Increase the volume by the adjust amount (clamped to 0 - 1)
         self._audioOutput.setVolume(self._audioOutput.volume() + AUDIO_ADJUST_AMOUNT)
@@ -734,8 +775,11 @@ class FullImage(QGraphicsView):
     def VideoPositionChanged(self) -> None:
         if self._durationGraphicsPolygonItem is None:
             # Create the duration polygon and add it to the scene
-            self._durationGraphicsPolygonItem = QGraphicsPolygonItem()
+            self._durationGraphicsPolygonItem = DurationPolygonItem()
             self._scene.addItem(self._durationGraphicsPolygonItem)
+
+            # Connect the duration jump signal
+            self._durationGraphicsPolygonItem.signaller.durationJumpSignal.connect(self._positionJump)
 
         if self._positionGraphicsLineItem is None:
             # Create the position line and add it to the scene
