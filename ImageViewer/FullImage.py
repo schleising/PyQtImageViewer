@@ -6,11 +6,11 @@ from typing import Any, Callable, Optional
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsLineItem
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsLineItem, QGraphicsPolygonItem
 from PySide6.QtMultimediaWidgets import QGraphicsVideoItem
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtGui import QPixmap, QResizeEvent, QWheelEvent, QMouseEvent, QKeyEvent, QCursor, QColor
-from PySide6.QtCore import Qt, QPoint, QPointF, QRectF, Signal, QLineF, QTimer
+from PySide6.QtCore import Qt, QPoint, QPointF, QRect, QRectF, Signal, QLineF, QTimer
 
 from ImageViewer.ImageInfoDialog import ImageInfoDialog
 from ImageViewer.Constants import (
@@ -68,8 +68,8 @@ class FullImage(QGraphicsView):
         # Connect the media player position changed signal
         self._mediaPlayer.positionChanged.connect(self.VideoPositionChanged) # type: ignore
 
-        # Create a line item for the video duration
-        self._durationGraphicsLineItem: Optional[QGraphicsLineItem] = None
+        # Create a polygon item for the video duration
+        self._durationGraphicsPolygonItem: Optional[QGraphicsPolygonItem] = None
 
         # Create a line item for the video position
         self._positionGraphicsLineItem: Optional[QGraphicsLineItem] = None
@@ -130,10 +130,10 @@ class FullImage(QGraphicsView):
             self._scene.removeItem(self._graphicsVideoItem)
             self._graphicsVideoItem = None
 
-        # If there is a duration line item remove it and set it to None
-        if self._durationGraphicsLineItem is not None:
-            self._scene.removeItem(self._durationGraphicsLineItem)
-            self._durationGraphicsLineItem = None
+        # If there is a duration polygon item remove it and set it to None
+        if self._durationGraphicsPolygonItem is not None:
+            self._scene.removeItem(self._durationGraphicsPolygonItem)
+            self._durationGraphicsPolygonItem = None
 
         # If there is a position line item remove it and set it to None
         if self._positionGraphicsLineItem is not None:
@@ -592,9 +592,9 @@ class FullImage(QGraphicsView):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
 
-        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
-            # Show the duration line
-            self._durationGraphicsLineItem.show()
+        if self._durationGraphicsPolygonItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Show the duration polygon
+            self._durationGraphicsPolygonItem.show()
 
             # show the position line
             self._positionGraphicsLineItem.show()
@@ -689,9 +689,9 @@ class FullImage(QGraphicsView):
         # Jump ahead by the skip amount
         self._mediaPlayer.setPosition(self._mediaPlayer.position() + VIDEO_SKIP_AMOUNT)
 
-        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
-            # Show the duration line
-            self._durationGraphicsLineItem.show()
+        if self._durationGraphicsPolygonItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Show the duration polygon
+            self._durationGraphicsPolygonItem.show()
 
             # show the position line
             self._positionGraphicsLineItem.show()
@@ -703,9 +703,9 @@ class FullImage(QGraphicsView):
         # Jump back by the skip amount
         self._mediaPlayer.setPosition(self._mediaPlayer.position() - VIDEO_SKIP_AMOUNT)
 
-        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
-            # Show the duration line
-            self._durationGraphicsLineItem.show()
+        if self._durationGraphicsPolygonItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+            # Show the duration polygon
+            self._durationGraphicsPolygonItem.show()
 
             # show the position line
             self._positionGraphicsLineItem.show()
@@ -732,10 +732,10 @@ class FullImage(QGraphicsView):
         self._audioOutput.setMuted(not self._audioOutput.isMuted())
 
     def VideoPositionChanged(self) -> None:
-        if self._durationGraphicsLineItem is None:
-            # Create the duration line and add it to the scene
-            self._durationGraphicsLineItem = QGraphicsLineItem()
-            self._scene.addItem(self._durationGraphicsLineItem)
+        if self._durationGraphicsPolygonItem is None:
+            # Create the duration polygon and add it to the scene
+            self._durationGraphicsPolygonItem = QGraphicsPolygonItem()
+            self._scene.addItem(self._durationGraphicsPolygonItem)
 
         if self._positionGraphicsLineItem is None:
             # Create the position line and add it to the scene
@@ -752,35 +752,33 @@ class FullImage(QGraphicsView):
         self._drawVideoUi()
 
     def _drawVideoUi(self) -> None:
-        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoLength > 0:
-            # Get the x start position of the duration line
-            xStart = VIDEO_UI_MARGIN
+        if self._durationGraphicsPolygonItem is not None and self._positionGraphicsLineItem is not None and self._videoLength > 0:
+            # Get the x start position of the duration rect in view coordinates
+            durationXStart = VIDEO_UI_MARGIN
 
-            # Get the x end position of the duration line
-            xFinish = self.width() - VIDEO_UI_MARGIN
+            # Get the x end position of the duration rect in view coordinates
+            durationWidth = self.width() - VIDEO_UI_MARGIN - durationXStart
 
-            # Get the y position of the duration line
-            yPos = self.height() - VIDEO_UI_MARGIN
+            # Get the y position of the duration rect in view coordinates
+            durationYStart = self.height() - VIDEO_UI_MARGIN - VIDEO_POSITION_LINE_SIZE
 
-            # Create the start and end points of the duration line in view coordinates
-            startPoint = QPoint(xStart, yPos)
-            endPoint = QPoint(xFinish, yPos)
+            # Get the y position of the duration rect in view coordinates
+            durationHeight = self.height() - VIDEO_UI_MARGIN + VIDEO_POSITION_LINE_SIZE - durationYStart
 
-            # Create the start and end points of the duration line in scene coordinates
-            sceneStartPoint = self.mapToScene(startPoint)
-            sceneEndPoint = self.mapToScene(endPoint)
+            # Create the duration rect in view coordinates
+            durationViewRect = QRect(durationXStart, durationYStart, durationWidth, durationHeight)
 
-            # Create the duration line
-            durationLine = QLineF(sceneStartPoint, sceneEndPoint)
+            # Map the duration rect to scene coordinates, results in a polygon
+            durationScenePolygon = self.mapToScene(durationViewRect)
 
             # Get the x position of the position line
-            positionXPos = int(((xFinish - xStart) * (self._currentPosition / self._videoLength)) + xStart)
+            positionXPos = int((durationWidth * (self._currentPosition / self._videoLength)) + durationXStart)
 
-            # Get the starting y position of the position line
-            positionYStart = yPos - VIDEO_POSITION_LINE_SIZE
+            # Get the starting y position of the position line, plus 1 to account for no polygon outline
+            positionYStart = durationYStart + 1
 
-            # Get the ending y position of the position line
-            positionYEnd = yPos + VIDEO_POSITION_LINE_SIZE
+            # Get the ending y position of the position line, plus 1 to account for no polygon outline
+            positionYEnd = positionYStart + VIDEO_POSITION_LINE_SIZE + 1
 
             # Create the position start and end points in view coordinations
             positionStartPoint = QPoint(positionXPos, positionYStart)
@@ -793,22 +791,25 @@ class FullImage(QGraphicsView):
             # Create the position line
             positionLine = QLineF(scenePositionStartPoint, scenePositionEndPoint)
 
-            # Set the duration graphics line item
-            self._durationGraphicsLineItem.setLine(durationLine)
+            # Set the duration graphics polygon item
+            self._durationGraphicsPolygonItem.setPolygon(durationScenePolygon)
 
-            # Set the line to blue
-            self._durationGraphicsLineItem.setPen(DODGER_BLUE_50PC)
+            # Set the border to transparent
+            self._durationGraphicsPolygonItem.setPen(Qt.NoPen)
+
+            # Set the fill to dodger blue
+            self._durationGraphicsPolygonItem.setBrush(DODGER_BLUE_50PC)
 
             # Set the position graphics line item
             self._positionGraphicsLineItem.setLine(positionLine)
 
-            # Set the line to blue
-            self._positionGraphicsLineItem.setPen(DODGER_BLUE_50PC)
+            # Set the line to white
+            self._positionGraphicsLineItem.setPen(QColor(Qt.white))
 
     def _videoUiTimerExpired(self) -> None:
-        if self._durationGraphicsLineItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
+        if self._durationGraphicsPolygonItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
             # Hide the video UI
-            self._durationGraphicsLineItem.hide()
+            self._durationGraphicsPolygonItem.hide()
             self._positionGraphicsLineItem.hide()
 
             # Stop the timer to ensure it doesn't fire again
