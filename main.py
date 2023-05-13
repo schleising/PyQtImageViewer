@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Set up logging
     logging.basicConfig(
         filename=Path.home() / f'.PyQtImageViewer {datetime.now().strftime("%y-%m-%d %H.%M.%S")}.txt',
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='%(asctime)s:%(levelname)s:%(message)s'
     )
 

@@ -378,7 +378,6 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, self.resetScroll)
 
     def thumbnailClicked(self) -> None:
-        print('CLICK!!!')
         # Get the widget that was clicked
         thumbnail = self.sender()
 
