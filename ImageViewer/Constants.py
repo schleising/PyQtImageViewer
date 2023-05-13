@@ -23,6 +23,7 @@ IMAGE_EXTENSIONS = {
 # List of supported video extensions
 VIDEO_EXTENSIONS = {
     'MP4': '.mp4',
+    'MOV': '.mov',
 }
 
 # Full list of supported extensions

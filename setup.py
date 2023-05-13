@@ -47,6 +47,11 @@ Plist = dict(
             CFBundleTypeName='MPEG4 video',
             CFBundleTypeRole='Viewer',
         ),
+        dict(
+            CFBundleTypeExtensions=['mov'],
+            CFBundleTypeName='MOV video',
+            CFBundleTypeRole='Viewer',
+        ),
     ]
 )
 
