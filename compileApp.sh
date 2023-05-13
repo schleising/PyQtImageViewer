@@ -19,7 +19,7 @@ pip3 install -U pip
 pip3 install -r requirements.txt
 
 # Install py2app
-pip3 install py2app==0.28.2
+pip3 install py2app==0.28.4
 
 # Compile the .app
 python setup.py py2app -b $BUILDBASE/build -d $BUILDBASE/dist
@@ -31,7 +31,7 @@ deactivate
 rm -rf $BUILDBASE/.pqiv-build-env
 
 # Let the app find the shiboken6 library
-install_name_tool -add_rpath @executable_path/../Resources/lib/python3.10/shiboken6 $BUILDBASE/dist/PyQtImageViewer.app/Contents/MacOS/PyQtImageViewer
+install_name_tool -add_rpath @executable_path/../Resources/lib/python3.11/shiboken6 $BUILDBASE/dist/PyQtImageViewer.app/Contents/MacOS/PyQtImageViewer
 
 # Resign the app files
 codesign --force --deep -s - $BUILDBASE/dist/PyQtImageViewer.app

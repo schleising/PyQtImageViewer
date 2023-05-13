@@ -4,15 +4,15 @@ from PySide6.QtWidgets import QDialog, QWidget, QLabel, QGridLayout, QPushButton
 from PySide6.QtCore import Qt
 
 class ImageInfoDialog(QDialog):
-    def __init__(self, parent: Optional[QWidget], info: dict[str, str], f: Qt.WindowFlags = Qt.Dialog) -> None:
+    def __init__(self, parent: Optional[QWidget], info: dict[str, str], f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
         # Call the base initialiser adding the frameless window hint
-        super().__init__(parent, f | Qt.FramelessWindowHint)
+        super().__init__(parent, f | Qt.WindowType.FramelessWindowHint)
 
         # Create a grid layout
         self._layout = QGridLayout(self)
 
         # Set the layout to be fixed size
-        self._layout.setSizeConstraint(QGridLayout.SetFixedSize)
+        self._layout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
 
         # initialse the row number to 0
         rowNumber = 0

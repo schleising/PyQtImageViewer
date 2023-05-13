@@ -22,14 +22,14 @@ class SliderDialog(QDialog):
         acceptedFunc: Callable[[], None],
         rejectedFunc: Callable[[], None],
         parent: Optional[QWidget] = None,
-        f: Qt.WindowFlags = Qt.Dialog) -> None:
+        f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
         super().__init__(parent, f)
 
         # Create an overall VBoxLayout
         self._vBoxLayout = QVBoxLayout()
 
         # Set the dialog to be a fixed size
-        self._vBoxLayout.setSizeConstraint(QGridLayout.SetFixedSize)
+        self._vBoxLayout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
 
         # Create a grid layout for the sliders and their labels
         self._gridLayout = QGridLayout()
@@ -79,7 +79,7 @@ class SliderDialog(QDialog):
         self._vBoxLayout.addLayout(self._gridLayout)
 
         # Create the OK and Cancel buttons
-        self._dialogButtonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self._dialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
 
         # Connect the OK and Cancel buttons
         self._dialogButtonBox.accepted.connect(self.accept) # type: ignore

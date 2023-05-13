@@ -47,7 +47,7 @@ class DurationPolygonItem(QGraphicsPolygonItem):
         super().mousePressEvent(event)
 
         # Check the left button was pressed
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             # Calculate the minimum x of the bounding rect
             minX = self.boundingRect().left()
 
@@ -55,7 +55,7 @@ class DurationPolygonItem(QGraphicsPolygonItem):
             width = self.boundingRect().width()
 
             # Work out the xpos within the duration bar
-            xPos = event.buttonDownPos(Qt.LeftButton).x() - minX
+            xPos = event.buttonDownPos(Qt.MouseButton.LeftButton).x() - minX
 
             # Work out how far through the duration bar this is
             percentage = xPos / width
@@ -76,7 +76,7 @@ class FullImage(QGraphicsView):
         super().__init__(parent=parent)
 
         # Ensure transformations happen under the mouse position
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Use the built in drag scrolling
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
@@ -252,7 +252,7 @@ class FullImage(QGraphicsView):
         self._mediaPlayer.setSource(self._imagePath.as_posix())
 
         # Set the media player to loop infinitely
-        self._mediaPlayer.setLoops(QMediaPlayer.Infinite)
+        self._mediaPlayer.setLoops(QMediaPlayer.Loops.Infinite)
 
         # Connect the native size changed signal
         self._graphicsVideoItem.nativeSizeChanged.connect(self._videoSizeChanged)  # type: ignore
@@ -612,7 +612,7 @@ class FullImage(QGraphicsView):
         super().mousePressEvent(event)
 
         # Ignore the event if Control is held
-        if not event.modifiers() & Qt.Modifier.META: # META is actually Control
+        if not event.modifiers() & Qt.KeyboardModifier.MetaModifier: # META is actually Control
 
             # If this is a left click and there is a rect, remove it
             if event.button() == Qt.MouseButton.LeftButton and self._graphicsRectItem is not None:
@@ -667,7 +667,7 @@ class FullImage(QGraphicsView):
             self._graphicsRectItem = self._scene.addRect(rect)
 
             # Set the outline to blue
-            self._graphicsRectItem.setPen(QColor(Qt.blue))
+            self._graphicsRectItem.setPen(QColor(Qt.GlobalColor.blue))
 
             # Set the fill to dodger blue, 50% opaque
             self._graphicsRectItem.setBrush(DODGER_BLUE_50PC)
@@ -839,7 +839,7 @@ class FullImage(QGraphicsView):
             self._durationGraphicsPolygonItem.setPolygon(durationScenePolygon)
 
             # Set the border to transparent
-            self._durationGraphicsPolygonItem.setPen(Qt.NoPen)
+            self._durationGraphicsPolygonItem.setPen(Qt.PenStyle.NoPen)
 
             # Set the fill to dodger blue
             self._durationGraphicsPolygonItem.setBrush(DODGER_BLUE_50PC)
@@ -848,7 +848,7 @@ class FullImage(QGraphicsView):
             self._positionGraphicsLineItem.setLine(positionLine)
 
             # Set the line to white
-            self._positionGraphicsLineItem.setPen(QColor(Qt.white))
+            self._positionGraphicsLineItem.setPen(QColor(Qt.GlobalColor.white))
 
     def _videoUiTimerExpired(self) -> None:
         if self._durationGraphicsPolygonItem is not None and self._positionGraphicsLineItem is not None and self._videoUiTimer is not None:
