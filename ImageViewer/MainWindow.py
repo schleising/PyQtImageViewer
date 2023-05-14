@@ -161,6 +161,9 @@ class MainWindow(QMainWindow):
         self._smoothAction = self._imageMenu.addAction('Smooth', QKeyCombination(Qt.Modifier.ALT, Qt.Key.Key_O), self._fullSizeImage.Smooth)
         self._unsharpMaskAction = self._imageMenu.addAction('Unsharp Mask', QKeyCombination(Qt.Modifier.ALT, Qt.Key.Key_U), self._fullSizeImage.UnsharpMask)
         self._autoContrastAction = self._imageMenu.addAction('Auto Contrast', QKeyCombination(Qt.Modifier.ALT, Qt.Key.Key_A), self._fullSizeImage.AutoContrast)
+        self._denoiseAction = self._imageMenu.addAction('Denoise', QKeyCombination(Qt.Modifier.ALT, Qt.Key.Key_N), self._fullSizeImage.Denoise)
+        self._imageMenu.addSeparator()
+        self._superResolutionAction = self._imageMenu.addAction('Super Resolution', QKeyCombination(Qt.Modifier.META, Qt.Key.Key_S), self._fullSizeImage.SuperResolution)
         self._imageMenu.addSeparator()
         self._undoAction = self._imageMenu.addAction('Undo', QKeySequence.StandardKey.Undo, self._fullSizeImage.UndoLastChange)
 
@@ -198,6 +201,8 @@ class MainWindow(QMainWindow):
             isinstance(self._smoothAction, QAction) and
             isinstance(self._unsharpMaskAction, QAction) and
             isinstance(self._autoContrastAction, QAction) and
+            isinstance(self._denoiseAction, QAction) and
+            isinstance(self._superResolutionAction, QAction) and
             isinstance(self._playPauseAction, QAction) and
             isinstance(self._skipForwardsAction, QAction) and
             isinstance(self._skipBackwardsAction, QAction) and
@@ -231,6 +236,8 @@ class MainWindow(QMainWindow):
             self._fullSizeImage.imageLoadedSignal.connect(self._smoothAction.setEnabled)
             self._fullSizeImage.imageLoadedSignal.connect(self._unsharpMaskAction.setEnabled)
             self._fullSizeImage.imageLoadedSignal.connect(self._autoContrastAction.setEnabled)
+            self._fullSizeImage.imageLoadedSignal.connect(self._denoiseAction.setEnabled)
+            self._fullSizeImage.imageLoadedSignal.connect(self._superResolutionAction.setEnabled)
 
             # Connect signals to enable menu items if an image is loaded rather than an video
             self._fullSizeImage.videoLoadedSignal.connect(self._playPauseAction.setEnabled)

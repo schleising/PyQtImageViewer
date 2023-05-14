@@ -226,9 +226,6 @@ class FullImage(QGraphicsView):
         # Set the scene rect to the bounding rect of the pixmap
         self._scene.setSceneRect(self._pixmapGraphicsItem.boundingRect())
 
-        # Set the transformation mode to smooth for the pixmap to avoid aliasing and pixelation
-        self._pixmapGraphicsItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-
         # Reset the zoom
         self.ResetZoom()
 
@@ -524,6 +521,18 @@ class FullImage(QGraphicsView):
     def BlackAndWhite(self, args: tuple[Any], kwargs: dict[str, float]) -> None:
         if self._pilImage is not None:
             self._pilImage = ImageTools.Colour(self._pilImage, 0.0)
+
+    @undo
+    def Denoise(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
+        if self._pilImage is not None:
+            # Denoise the image
+            self._pilImage = ImageTools.Denoise(self._pilImage)
+
+    @undo
+    def SuperResolution(self, args: tuple[Any], kwargs: dict[str, Any]) -> None:
+        if self._pilImage is not None:
+            # Upscale the image 4x
+            self._pilImage = ImageTools.SuperResolution(self._pilImage, 4)
 
     def ImageInfo(self) -> None:
         if self._pilImage is not None:

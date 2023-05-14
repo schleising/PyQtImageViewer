@@ -1,7 +1,12 @@
 from typing import Callable
+import logging
+
 from PIL import Image, ImageFilter, ImageEnhance
 from PIL.ImageFilter import Filter
 from PIL import ImageOps
+
+import numpy as np
+from cv2 import dnn_superres, cvtColor, fastNlMeansDenoisingColored, COLOR_RGB2BGR, COLOR_BGR2RGB
 
 def _ManipulateImage(inputImage: Image.Image, filter: Filter | Callable[[], Filter]) -> Image.Image:
     # Manipulate the image
@@ -67,3 +72,42 @@ def Brightness(inputImage: Image.Image, factor: float) -> Image.Image:
 
     # Manipulate the image
     return enhance.enhance(factor)
+
+def Denoise(inputImage: Image.Image) -> Image.Image:
+    # Convert the Pillow image to an OpenCV image
+    opencvImage = cvtColor(np.array(inputImage), COLOR_RGB2BGR)
+
+    # Denoise the image
+    denoisedImage = fastNlMeansDenoisingColored(opencvImage, None, 3, 3, 7, 21)  # type: ignore
+
+    # Convert the OpenCV image to a Pillow image
+    return Image.fromarray(cvtColor(denoisedImage, COLOR_BGR2RGB))
+
+def SuperResolution(inputImage: Image.Image, factor: int) -> Image.Image:
+    if factor >= 2 and factor <= 4:
+        # Create the super resolution object
+        sr = dnn_superres.DnnSuperResImpl_create()
+
+        # Convert the Pillow image to an OpenCV image
+        opencvImage = cvtColor(np.array(inputImage), COLOR_RGB2BGR)
+
+        # Create the model path
+        modelPath = f'ImageViewer/Resources/FSRCNN_x{factor}.pb'
+
+        # Read the model
+        sr.readModel(modelPath)
+
+        # Set the model to use
+        sr.setModel('fsrcnn', factor)
+
+        # Upscale the image
+        upscaledImage = sr.upsample(opencvImage)
+
+        # Convert the OpenCV image to a Pillow image
+        return Image.fromarray(cvtColor(upscaledImage, COLOR_BGR2RGB))
+    else:
+        # Log the error
+        logging.log(logging.ERROR, f'Invalid super resolution factor: {factor}')
+
+        # Return the original image
+        return inputImage
